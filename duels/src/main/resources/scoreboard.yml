@@ -1,0 +1,37 @@
+# Match and spectator sidebars. Lines starting with "?flag " only show when the flag applies.
+# Flags: duel (1 opponent), team (several opponents), boxing, bridge, rounds (best-of), ranked, waiting.
+# Placeholders: <opponent> <opponent_ping> <ping> <cps> <duration> <kit> <match> <hits> <opponent_hits> <hits_needed>
+#               <combo> <score> <round> <spectators> <team_alive> <enemy_alive>
+
+match:
+  title: "<primary><bold>PRACTICE"
+  lines:
+    - "<dark_gray><strikethrough>                          "
+    - "?waiting <gray>Waiting for an arena..."
+    - "?duel <gray>Opponent: <white><opponent>"
+    - "?team <gray>Your team: <success><team_alive> alive"
+    - "?team <gray>Enemies: <error><enemy_alive> alive"
+    - "<gray>Duration: <white><duration>"
+    - " "
+    - "?boxing <gray>Hits: <success><hits></success> <dark_gray>-</dark_gray> <error><opponent_hits></error> <dark_gray>/ <hits_needed>"
+    - "?boxing <gray>Combo: <white><combo>"
+    - "?bridge <gray>Goals: <white><score>"
+    - "?rounds <gray>Round <white><round></white> <dark_gray>(<score>)"
+    - "<gray>Your ping: <white><ping>ms"
+    - "?duel <gray>Their ping: <white><opponent_ping>ms"
+    - "  "
+    - "<primary>yourserver.net"
+    - "<dark_gray><strikethrough>                          "
+
+spectating:
+  title: "<primary><bold>SPECTATING"
+  lines:
+    - "<dark_gray><strikethrough>                          "
+    - "<gray>Kit: <kit>"
+    - "<gray>Duration: <white><duration>"
+    - "?rounds <gray>Score: <white><score>"
+    - "?bridge <gray>Goals: <white><score>"
+    - "<gray>Spectators: <white><spectators>"
+    - " "
+    - "<primary>yourserver.net"
+    - "<dark_gray><strikethrough>                          "

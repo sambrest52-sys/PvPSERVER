@@ -1,0 +1,16 @@
+name: PvPDuels
+version: '${project.version}'
+main: net.pvpserver.duels.PvPDuels
+api-version: '1.21'
+author: PvPServer
+description: ${project.description}
+depend: [PvPCore]
+softdepend: [PvPLobby]
+
+permissions:
+  pvp.command.duel: {default: true, description: Use /duel and /rematch}
+  pvp.command.spectate: {default: true, description: Use /spectate}
+  pvp.command.leave: {default: true, description: Use /leave}
+  pvp.command.inventory: {default: true, description: View post-match inventories}
+  pvp.command.queue: {default: true, description: Use /queue}
+  pvp.admin.matches: {default: op, description: List and cancel matches}

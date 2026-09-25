@@ -1,0 +1,16 @@
+# PvPDuels menu titles and spectator items.
+titles:
+  queue-unranked: "<dark_gray>Unranked Queue <mode>"
+  queue-ranked: "<dark_gray>Ranked Queue <mode>"
+  duel-kit: "<dark_gray>Duel <player>"
+  duel-options: "<dark_gray>Duel settings: <kit>"
+  party-fight: "<dark_gray>Party Fight"
+  party-kit: "<dark_gray>Choose a kit"
+  party-list: "<dark_gray>Challenge a party"
+  spectate: "<dark_gray>Live Matches"
+  spectate-players: "<dark_gray>Teleport to player"
+  inventory: "<dark_gray><player>'s Inventory"
+
+items:
+  spectator-players: {material: COMPASS, name: "<primary>Teleport to player <gray>(Right Click)"}
+  spectator-leave: {material: RED_DYE, name: "<error>Stop spectating <gray>(Right Click)"}

@@ -1,0 +1,201 @@
+# PvPDuels messages. Missing keys fall back to PvPCore's messages.yml.
+
+queue:
+  joined-unranked: "<prefix><gray>Joined the <white>unranked <mode></white> queue for <kit><gray>."
+  joined-ranked: "<prefix><gray>Joined the <accent>ranked <mode></accent> queue for <kit> <dark_gray>(ELO <elo>)<gray>."
+  left: "<prefix><gray>You left the queue."
+  left-member-quit: "<prefix><error>A party member disconnected; your party left the queue."
+  left-party-changed: "<prefix><error>Your party changed; you were removed from the queue."
+  not-queued: "<prefix><error>You are not in a queue."
+  already-queued: "<prefix><error>You are already in a queue."
+  busy: "<prefix><error>You can only queue from the lobby."
+  kit-unavailable: "<prefix><error>That kit is not available in this queue."
+  party-not-leader: "<prefix><error>Only your party leader can queue."
+  party-too-large: "<prefix><error>Your party is too large for <mode>. Parties of 2 can queue 2v2."
+  party-member-busy: "<prefix><error><player> is busy right now."
+  ranked-locked: "<prefix><error>You need <wins> unranked wins with this kit to play ranked (<current>/<wins>)."
+  found-unranked: "<prefix><success>Match found!</success> <gray><kit> <gray>vs <white><opponent>"
+  found-ranked: "<prefix><success>Match found!</success> <gray><kit> <gray>vs <white><opponent> <dark_gray>(<elo> ELO)"
+  actionbar-unranked: "<gray>Searching for a match... <white><time>"
+  actionbar-ranked: "<gray>Searching <white><time></white> <dark_gray>|</dark_gray> <gray>Range <white><min></white>-<white><max>"
+
+match:
+  finding-arena: "<prefix><gray>Finding an arena..."
+  no-arena: "<prefix><error>No arena is available for <kit><error> right now. Please try again."
+  player-unavailable: "<prefix><error><player> is no longer available; the match was cancelled."
+  cancelled-left: "<prefix><error>The match was cancelled because a player left."
+  cancelled-shutdown: "<prefix><error>The match was cancelled (server restarting)."
+  cancelled-admin: "<prefix><error>The match was cancelled by staff."
+  admin-cancelled: "<prefix><gray>Cancelled <white><match>."
+  starting:
+    - ""
+    - " <primary><bold>Match starting</bold></primary> <dark_gray>»</dark_gray> <kit>"
+    - " <gray>Opponent: <white><opponent>"
+    - " <gray>Arena: <white><arena></white> <dark_gray>|</dark_gray> <gray>First to <white><rounds>"
+    - ""
+  starting-ranked:
+    - ""
+    - " <accent><bold>Ranked match starting</bold></accent> <dark_gray>»</dark_gray> <kit>"
+    - " <gray>Opponent: <white><opponent></white> <dark_gray>(<elo> ELO)"
+    - " <gray>Arena: <white><arena></white> <dark_gray>|</dark_gray> <gray>First to <white><rounds>"
+    - ""
+  countdown:
+    title: "<primary><seconds>"
+    subtitle: "<gray>Get ready..."
+  fight:
+    title: "<success><bold>FIGHT!"
+    subtitle: ""
+  round-start: "<prefix><gray>Round <white><round></white> <dark_gray>(<score>)"
+  round-won: "<prefix><white><team></white> <gray>won round <white><round></white>. <dark_gray>(<score>)"
+  killed: "<prefix><error><victim></error> <gray>was killed by <white><killer></white> <dark_gray>(<health>❤)"
+  died: "<prefix><error><victim></error> <gray>died."
+  eliminated: "<prefix><gray>You were eliminated. You can watch the rest of the round."
+  player-quit: "<prefix><error><player> disconnected and forfeited."
+  player-forfeit: "<prefix><error><player> forfeited."
+  nothing-to-leave: "<prefix><error>You are not in a match, queue or spectating."
+  time-limit: "<prefix><error>Time limit reached. The match ends in a draw."
+  goal: "<prefix><accent><player></accent> <gray>scored for <white><team></white>! <dark_gray>(<score>)"
+  goal-title:
+    title: "<accent><player> scored!"
+    subtitle: "<white><score>"
+  build-limit: "<error>You can't build here."
+  victory-title:
+    title: "<success><bold>VICTORY!"
+    subtitle: "<gray>Well played"
+  defeat-title:
+    title: "<error><bold>DEFEAT"
+    subtitle: "<gray><winner> won"
+  draw-title:
+    title: "<accent><bold>DRAW"
+    subtitle: ""
+  result:
+    - "<dark_gray><strikethrough>                                              "
+    - " <primary><bold>Match results</bold></primary> <dark_gray>(<kit><dark_gray>, <duration>)"
+    - " <success>Winner: <white><winner>"
+    - " <error>Loser: <white><loser>"
+    - " <gray>Inventories: <inventories>"
+    - "<dark_gray><strikethrough>                                              "
+  result-draw:
+    - "<dark_gray><strikethrough>                                              "
+    - " <primary><bold>Match results</bold></primary> <dark_gray>(<kit><dark_gray>, <duration>)"
+    - " <accent>The match ended in a draw."
+    - " <gray>Inventories: <inventories>"
+    - "<dark_gray><strikethrough>                                              "
+  inventory-button: "[<player>]"
+  inventory-hover: "<gray>Click to view <white><player></white>'s inventory"
+  elo-gained: "<prefix><success>+<change> ELO</success> <gray>(now <white><elo></white>)"
+  elo-lost: "<prefix><error>-<change> ELO</error> <gray>(now <white><elo></white>)"
+  rematch-offer: "<prefix><gray>Want another round? <button>"
+  rematch-button: "<accent><bold>[REMATCH]"
+  rematch-hover: "<gray>Click to challenge your opponent again"
+  list-header: "<primary><bold>Live matches</bold> <dark_gray>(<count>)"
+  list-entry: " <dark_gray>•</dark_gray> <white><match></white> <dark_gray>-</dark_gray> <kit> <gray><state> <duration> <dark_gray>(<arena>)"
+
+duel:
+  self: "<prefix><error>You can't duel yourself."
+  busy: "<prefix><error>You can only send duels from the lobby."
+  target-busy: "<prefix><error><player> is busy right now."
+  disabled: "<prefix><error><player> is not accepting duel requests."
+  unknown-kit: "<prefix><error>Unknown kit <kit>."
+  same-party: "<prefix><error>You can't duel your own party. Use the party fight menu."
+  party-leaders-only: "<prefix><error>Only party leaders can challenge other parties."
+  party-mismatch: "<prefix><error>Both players must be solo, or both must lead a party."
+  party-member-busy: "<prefix><error><player> is busy; the party duel can't start."
+  party-changed: "<prefix><error>The parties changed; the challenge is no longer valid."
+  already-sent: "<prefix><error>You already challenged <player>."
+  sent: "<prefix><gray>Duel request sent to <white><player></white> (<kit><gray>)."
+  party-sent: "<prefix><gray>Party duel request sent to <white><player></white>'s party (<kit><gray>)."
+  received:
+    - ""
+    - " <primary><bold>Duel request</bold></primary> <gray>from <white><player>"
+    - " <gray>Kit: <kit> <dark_gray>|</dark_gray> <gray>Arena: <white><arena></white> <dark_gray>|</dark_gray> <gray>First to <white><rounds>"
+    - " <accept> <deny> <dark_gray>(expires in <seconds>s)"
+    - ""
+  party-received:
+    - ""
+    - " <primary><bold>Party duel request</bold></primary> <gray>from <white><player></white>'s party <dark_gray>(<size> players)"
+    - " <gray>Kit: <kit> <dark_gray>|</dark_gray> <gray>Arena: <white><arena>"
+    - " <accept> <deny> <dark_gray>(expires in <seconds>s)"
+    - ""
+  accept-button: "<success><bold>[ACCEPT]"
+  accept-hover: "<gray>Click to accept"
+  deny-button: "<error><bold>[DENY]"
+  deny-hover: "<gray>Click to deny"
+  accepted: "<prefix><success><player> accepted your duel!"
+  denied: "<prefix><error><player> denied your duel request."
+  denied-self: "<prefix><gray>Denied <white><player></white>'s duel request."
+  no-request: "<prefix><error>You have no pending request from <player>."
+  expired: "<prefix><gray>Your duel request to <white><player></white> expired."
+  kit-gone: "<prefix><error>That kit is no longer available."
+  no-rematch: "<prefix><error>There is nobody to rematch."
+
+party-fight:
+  too-small: "<prefix><error>You need at least 2 players in your party."
+
+spectate:
+  started: "<prefix><gray>Now spectating <white><match></white> (<kit><gray>). Use the red dye or <white>/leave</white> to stop."
+  stopped: "<prefix><gray>You stopped spectating."
+  not-in-match: "<prefix><error><player> is not in a match."
+  busy: "<prefix><error>You can't spectate right now."
+  disabled: "<prefix><error><player> doesn't allow spectators."
+  no-matches: "<prefix><gray>There are no matches to spectate right now."
+  joined-notify: "<prefix><gray><white><player></white> is now spectating."
+  player-lore:
+    - "<gray>Health: <white><health>❤"
+    - "<gray>Ping: <white><ping>ms"
+    - "<gray>Hits: <white><hits>"
+    - ""
+    - "<gray>Click to teleport"
+
+inventory:
+  expired: "<prefix><error>That inventory is no longer available."
+  health: "<red>Health: <white><health>❤"
+  food: "<gold>Food: <white><food>"
+  effects: "<light_purple>Potion effects"
+  effect-line: "<gray><effect> <white><level></white> <dark_gray>(<duration>)"
+  no-effects: "<gray>None"
+  potions: "<red>Health potions left: <white><potions>"
+  potions-lore:
+    - "<gray>Thrown: <white><thrown>"
+    - "<gray>Missed: <white><missed>"
+  stats: "<primary>Match statistics"
+  stats-lore:
+    - "<gray>Hits: <white><hits>"
+    - "<gray>Longest combo: <white><combo>"
+
+menu:
+  kit-pick-lore: ["", "<gray>Click to select"]
+  queue-lore:
+    - "<gray>In queue: <white><queued>"
+    - "<gray>Fighting: <white><fighting>"
+    - ""
+    - "<gray>Click to join the <white><mode></white> queue"
+  queue-lore-ranked:
+    - "<gray>In queue: <white><queued>"
+    - "<gray>Fighting: <white><fighting>"
+    - "<gray>Your ELO: <accent><elo>"
+    - ""
+    - "<gray>Click to join the <white><mode></white> queue"
+  queue-mode: "<primary>Mode: <white><mode>"
+  queue-mode-lore: ["<gray>Click to switch between 1v1 and 2v2", "<gray>(solo players are paired into teams)"]
+  arena-random: "<accent>Random arena"
+  arena-select: ["<gray>Click to select"]
+  arena-selected: ["<success>Selected"]
+  rounds: "<primary>First to <white><rounds></white> <dark_gray>(best of <best_of>)"
+  rounds-lore: ["<gray>Left click: more rounds", "<gray>Right click: fewer rounds"]
+  duel-send: "<success><bold>Send duel request"
+  party-split: "<primary>Split Fight"
+  party-split-lore: ["<gray>Split your party into two", "<gray>random teams."]
+  party-ffa: "<primary>Party FFA"
+  party-ffa-lore: ["<gray>Every member for themselves."]
+  party-duel: "<primary>Duel another party"
+  party-duel-lore: ["<gray>Challenge another party's leader."]
+  party-entry: "<white><player>'s party"
+  party-entry-lore: ["<gray>Members: <white><size>", "", "<gray>Click to challenge"]
+  spectate-lore:
+    - "<gray>Kit: <kit>"
+    - "<gray>Type: <white><type>"
+    - "<gray>Duration: <white><duration>"
+    - "<gray>Spectators: <white><spectators>"
+    - ""
+    - "<gray>Click to spectate"
