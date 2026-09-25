@@ -1,0 +1,17 @@
+# FFA sidebar. Flags: tagged (in combat), ranked.
+# Placeholders: <arena> <players> <kills> <deaths> <streak> <total_kills> <kdr> <rating> <best_streak> <combat> <ping>
+ffa:
+  title: "<primary><bold>FFA"
+  lines:
+    - "<dark_gray><strikethrough>                          "
+    - "<gray>Arena: <white><arena>"
+    - "<gray>Players: <white><players>"
+    - " "
+    - "<gray>Kills: <success><kills></success> <dark_gray>|</dark_gray> <gray>Deaths: <error><deaths>"
+    - "<gray>Streak: <accent><streak>"
+    - "<gray>KDR: <white><kdr>"
+    - "?ranked <gray>Rating: <primary><rating>"
+    - "?tagged <error>Combat: <white><combat>s"
+    - "  "
+    - "<primary>yourserver.net"
+    - "<dark_gray><strikethrough>                          "

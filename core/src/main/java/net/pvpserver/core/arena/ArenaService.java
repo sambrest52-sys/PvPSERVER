@@ -57,6 +57,7 @@ public final class ArenaService implements Reloadable {
     private final Deque<Request> pending = new ArrayDeque<>();
     private final BitSet usedSlots = new BitSet();
     private final BlockPaster paster;
+    private final CompletableFuture<Void> ready = new CompletableFuture<>();
     private World world;
     private int spacing;
     private int gridWidth;
@@ -97,7 +98,19 @@ public final class ArenaService implements Reloadable {
         }
         paster.start();
         loadDefinitions();
-        loadTemplatesAsync().thenRun(() -> Tasks.sync(this::prewarm));
+        loadTemplatesAsync().thenRun(() -> Tasks.sync(() -> {
+            prewarm();
+            ready.complete(null);
+        }));
+    }
+
+    /**
+     * Completes on the main thread once templates are loaded (gamemodes that paste templates themselves wait on it).
+     *
+     * @return readiness future
+     */
+    public CompletableFuture<Void> ready() {
+        return ready;
     }
 
     private static boolean isEmpty(File folder) {

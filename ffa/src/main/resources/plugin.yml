@@ -1,0 +1,11 @@
+name: PvPFFA
+version: '${project.version}'
+main: net.pvpserver.ffa.PvPFFA
+api-version: '1.21'
+author: PvPServer
+description: ${project.description}
+depend: [PvPCore]
+softdepend: [PvPLobby]
+
+permissions:
+  pvp.command.ffa: {default: true, description: Use /ffa}
