@@ -93,14 +93,25 @@ Choices made while building this project without stopping to ask, with the reaso
   `paper-api` from `repo.papermc.io` as declared in the POM.
 * For the same reason a real Paper server could not be started in the sandbox; Paperclip also needs Mojang's server
   jar. The substitute is the MockBukkit smoke suite (`mvn -Psmoke verify`). It loads the four built jars with
-  separate class loaders the way Paper does and runs through:
-  * joining and the lobby hotbar
-  * ranked queue matchmaking into a pasted arena, ending with ELO **persisted to SQLite and checked**
-  * a sumo void fall
-  * a `/duel` request sent through the GUI, accepted and forfeited
-  * FFA fake death and respawn
-  * party commands, moderation commands, `/pvpadmin reload`, `/kb set`
-  * disabling all plugins mid-match
-
-  The smoke suite found and fixed three real bugs: invalid `plugin.yml` YAML, fragile armor clearing, and a
-  deprecated event listener.
+  separate class loaders the way Paper does and plays 22 scenarios. The full list is in the README. It covers every
+  gamemode, every kit win condition, parties, spectators, the kit editor, arena authoring, holograms, moderation and
+  reconnect handling. Across the whole suite the server log has no warnings or errors.
+* **Mock gaps are filled in the test harness and must fail loudly.** MockBukkit leaves some Paper methods
+  unimplemented, and its `UnimplementedOperationException` makes JUnit report a test as *skipped*. The suite turns
+  that into a failure, so a gap is noticed and filled in `PracticeServerMock` (text display billboards, per-plugin
+  chunk tickets and so on) instead of hiding a scenario.
+* **Where MockBukkit differs from Paper, tests assert on the event.** `simulatePlayerMove` ignores
+  `PlayerMoveEvent#setTo`, which freeze, the countdown and the FFA safe zone use to push players back. Tests read the
+  event's final destination, which is what Paper applies. The chunk a player stands in is also not "loaded" in the
+  mock until requested.
+* **MySQL/MariaDB was verified against a real MariaDB 10.11** with the Connector/J 9.2.0 driver that Paper bundles.
+  Two runs cover it: the storage contract (the same tests as SQLite), and a full server boot that plays a ranked
+  match and reloads the rating on rejoin. Both run for `MYSQL` and `MARIADB`. They are skipped unless
+  `-Dpvp.test.mysql.host` is given, so the default build needs no database.
+* The smoke suite found and fixed four real bugs:
+  * invalid `plugin.yml` YAML
+  * fragile armor clearing
+  * a deprecated event listener
+  * the ghost-block fix throwing when another plugin fires a `BlockPlaceEvent` with no clicked block
+* New arenas created with `/arena create` start with the `standard` tag, so they work for most kits right away.
+  Use `/arena tag remove standard` for special arenas such as sumo rings.

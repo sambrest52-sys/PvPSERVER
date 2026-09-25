@@ -369,7 +369,8 @@ public final class CombatListener implements Listener {
     }
 
     private static void resend(Player player, Block block) {
-        if (block.getWorld().equals(player.getWorld())) {
+        // Plugins that fire synthetic place events (build-permission checks) may leave the clicked block null.
+        if (block != null && block.getWorld().equals(player.getWorld())) {
             player.sendBlockChange(block.getLocation(), block.getBlockData());
         }
     }

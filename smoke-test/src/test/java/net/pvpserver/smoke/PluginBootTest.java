@@ -3,26 +3,15 @@ package net.pvpserver.smoke;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
-import org.bukkit.damage.DamageSource;
-import org.bukkit.damage.DamageType;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.mockbukkit.mockbukkit.MockBukkit;
-import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 import java.io.File;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,51 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Boots the four real plugin jars in a mocked Paper server and drives the main flows through the Bukkit API only
- * (the test never links against plugin classes, just like a server).
+ * Boot checks and the core flows: lobby join, ranked queue into a pasted arena with persisted ELO, sumo, duel
+ * requests, FFA, parties/moderation commands and shutdown mid-match.
  */
-class PluginBootTest {
-
-    @TempDir
-    Path temp;
-    private ServerMock server;
-    private Plugin core;
-    private Plugin lobby;
-    private Plugin duels;
-    private Plugin ffa;
-
-    @BeforeEach
-    void boot() throws Exception {
-        server = MockBukkit.mock(new PracticeServerMock(temp.resolve("worlds").toFile()));
-        server.addSimpleWorld("world");
-        PluginHarness harness = new PluginHarness(server, new File("target/plugins"), temp.resolve("plugins").toFile());
-        core = harness.load("PvPCore.jar");
-        lobby = harness.load("PvPLobby.jar");
-        duels = harness.load("PvPDuels.jar");
-        ffa = harness.load("PvPFFA.jar");
-        // Let arena templates load (async) and the arena/FFA worlds get pasted.
-        waitFor(() -> false, 2000);
-    }
-
-    @AfterEach
-    void shutdown() {
-        MockBukkit.unmock();
-    }
-
-    private void waitFor(java.util.function.BooleanSupplier condition, long millis) throws InterruptedException {
-        long end = System.currentTimeMillis() + millis;
-        while (System.currentTimeMillis() < end && !condition.getAsBoolean()) {
-            server.getScheduler().performOneTick();
-            Thread.sleep(5);
-        }
-    }
-
-    private PlayerMock join(String name) throws InterruptedException {
-        PlayerMock player = new PracticePlayerMock(server, name);
-        server.addPlayer(player);
-        waitFor(() -> false, 100);
-        return player;
-    }
+class PluginBootTest extends SmokeTestBase {
 
     @Test
     void allPluginsEnable() {
@@ -125,8 +73,7 @@ class PluginBootTest {
         a.disconnect();
         b.disconnect();
         waitFor(() -> false, 1000);
-        File db = new File(core.getDataFolder(), "data/practice.db");
-        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + db.getAbsolutePath());
+        try (Connection connection = sqlite();
              Statement statement = connection.createStatement()) {
             ResultSet match = statement.executeQuery("SELECT winners, losers, ranked, elo_change FROM pvp_matches");
             assertTrue(match.next(), "match recorded");
@@ -205,17 +152,6 @@ class PluginBootTest {
         assertFalse(core.isEnabled());
     }
 
-    /** Fires the damage event Paper would fire for a melee hit and applies it when not cancelled. */
-    private EntityDamageByEntityEvent hit(PlayerMock attacker, PlayerMock victim, double damage) {
-        DamageSource source = DamageSource.builder(DamageType.PLAYER_ATTACK).withCausingEntity(attacker).withDirectEntity(attacker).build();
-        EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(attacker, victim, EntityDamageEvent.DamageCause.ENTITY_ATTACK, source, damage);
-        server.getPluginManager().callEvent(event);
-        if (!event.isCancelled()) {
-            victim.damage(event.getFinalDamage());
-        }
-        return event;
-    }
-
     @Test
     void sumoVoidFallEndsTheMatch() throws Exception {
         PlayerMock a = join("SumoA");
@@ -249,16 +185,5 @@ class PluginBootTest {
         waitFor(() -> "world".equals(a.getWorld().getName()) && "world".equals(b.getWorld().getName()), 8000);
         assertEquals("world", a.getWorld().getName());
         assertEquals("world", b.getWorld().getName());
-    }
-
-    private boolean run(PlayerMock player, String command) {
-        return server.dispatchCommand(player, command);
-    }
-
-    private static void dump(PlayerMock player) {
-        String message;
-        while ((message = player.nextMessage()) != null) {
-            System.out.println("[" + player.getName() + "] " + message);
-        }
     }
 }

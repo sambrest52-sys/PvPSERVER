@@ -54,7 +54,18 @@ playable immediately: join, right-click the swords in your hotbar and queue.
 |---------|--------|
 | `mvn clean package` | Four jars in `*/target/` and copied to `server/plugins/` (unit tests included) |
 | `mvn test` | Unit and SQLite integration tests (ELO, parties, queue matching, repositories...) |
-| `mvn -Psmoke verify` | Also boots the real jars inside MockBukkit and plays through joins, queues, matches, FFA, parties and moderation |
+| `mvn -Psmoke verify` | Also boots the real jars inside MockBukkit and plays 22 end-to-end scenarios (see below) |
+| `... -Dpvp.test.mysql.host=127.0.0.1 -Dpvp.test.mysql.username=u -Dpvp.test.mysql.password=p` | Adds the MySQL/MariaDB runs: the repository contract and a full ranked match on the server (`-Dpvp.test.mysql.database`, default `practice_test`; `-Dpvp.test.mysql.type=MARIADB` to test that setting) |
+
+The smoke scenarios cover:
+- Boot, lobby join and hotbar, and clean shutdown mid-match.
+- Ranked 1v1 with ELO saved to the database, and the ranked 2v2 queue with team ELO.
+- Kit rules: sumo void falls, boxing's 100-hit win, and bridge goals with the build limit and block rollback.
+- `/duel` requests, rematch, and the post-match inventory viewer.
+- Party split, party FFA and party-vs-party fights.
+- Spectators, the kit editor layout carrying into matches, and disconnect forfeits with a clean reconnect.
+- Duplicate queueing, FFA death and combat logging, the safe zone, and creating an arena in-game.
+- Leaderboard holograms, moderation (freeze, vanish, report, warn, tempban, history, unban) and private messages.
 
 ---
 
@@ -196,8 +207,9 @@ storage:
   mysql: {host: db.example.com, port: 3306, database: practice, username: practice, password: secret}
 ```
 
-Paper bundles the MySQL driver, and MariaDB works over it; the MariaDB driver is used if you install one.
-Tables are created automatically with the `table-prefix`.
+Paper bundles the MySQL driver (Connector/J 9.2.0), and MariaDB works over it; the MariaDB driver is used if you
+install one. Tables are created automatically with the `table-prefix`. Both settings have been tested against
+MariaDB 10.11 with that driver.
 
 ### LuckPerms
 
@@ -257,7 +269,8 @@ rolled back when the copy returns to the pool.
 5. Optional:
    * `/arena buildlimit [y]` (max build height for build kits)
    * `/arena voidy [y]` (falling below = death)
-   * `/arena tag add build|sumo|bridge|standard` (which kits can use it)
+   * `/arena tag add build|sumo|bridge|standard` (which kits can use it). New arenas start tagged `standard`;
+     remove it (`/arena tag remove standard`) for sumo rings and other special maps.
    * `/arena setgoal a|b` and `/arena goalradius <r>` for bridge. Goal A is the goal team A defends.
    * `/arena displayname <name>`, `/arena icon` (item in hand)
 6. `/arena save` captures the region asynchronously into `arenas/<name>.arena` and enables it.
