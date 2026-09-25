@@ -102,7 +102,7 @@ public final class LobbyService implements LobbyBridge {
         api.combat().reset(player);
         api.sidebars().sidebar(player).healthBelowName(false);
         player.getInventory().clear();
-        player.getInventory().setArmorContents(null);
+        player.getInventory().setArmorContents(new org.bukkit.inventory.ItemStack[4]);
         player.setItemOnCursor(null);
         player.closeInventory();
         player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));

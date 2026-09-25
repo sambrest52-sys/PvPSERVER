@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>net.pvpserver</groupId>
+        <artifactId>pvp-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <!--
+      Boots the four built plugin jars inside MockBukkit (a mocked Paper server) with their own plugin class
+      loaders, then drives them through the Bukkit API. Enabled with: mvn -Psmoke verify
+    -->
+    <artifactId>pvp-smoke-test</artifactId>
+    <name>PvP Smoke Test</name>
+
+    <properties>
+        <mockbukkit.version>4.116.3</mockbukkit.version>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
+    <dependencies>
+        <!-- Ordering only: builds the plugin jars first without putting them on the test classpath. -->
+        <dependency>
+            <groupId>net.pvpserver</groupId>
+            <artifactId>pvp-dist</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockbukkit.mockbukkit</groupId>
+            <artifactId>mockbukkit-v1.21</artifactId>
+            <version>${mockbukkit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>6.0.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-plugin-jars</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/plugins</outputDirectory>
+                            <artifactItems>
+                                <artifactItem><groupId>net.pvpserver</groupId><artifactId>pvp-core</artifactId><version>${project.version}</version><destFileName>PvPCore.jar</destFileName></artifactItem>
+                                <artifactItem><groupId>net.pvpserver</groupId><artifactId>pvp-lobby</artifactId><version>${project.version}</version><destFileName>PvPLobby.jar</destFileName></artifactItem>
+                                <artifactItem><groupId>net.pvpserver</groupId><artifactId>pvp-duels</artifactId><version>${project.version}</version><destFileName>PvPDuels.jar</destFileName></artifactItem>
+                                <artifactItem><groupId>net.pvpserver</groupId><artifactId>pvp-ffa</artifactId><version>${project.version}</version><destFileName>PvPFFA.jar</destFileName></artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

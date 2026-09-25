@@ -4,7 +4,7 @@ main: net.pvpserver.core.PvPCore
 api-version: '1.21'
 load: POSTWORLD
 author: PvPServer
-description: ${project.description}
+description: "${project.description}"
 softdepend: [LuckPerms]
 
 # Commands are registered through Paper's Brigadier API (see CommandRegistrar); only permissions live here.

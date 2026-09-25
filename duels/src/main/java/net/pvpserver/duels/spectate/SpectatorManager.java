@@ -1,6 +1,5 @@
 package net.pvpserver.duels.spectate;
 
-import com.destroystokyo.paper.event.entity.ProjectileCollideEvent;
 import net.pvpserver.core.api.PracticeApi;
 import net.pvpserver.core.api.bridge.LobbyBridge;
 import net.pvpserver.core.api.bridge.QueueBridge;
@@ -25,6 +24,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -191,8 +191,9 @@ public final class SpectatorManager implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onProjectile(ProjectileCollideEvent event) {
-        if (isSpectator(event.getCollidedWith())) {
+    public void onProjectile(ProjectileHitEvent event) {
+        // Cancelling lets arrows/pearls pass through hidden spectators.
+        if (event.getHitEntity() != null && isSpectator(event.getHitEntity())) {
             event.setCancelled(true);
         }
     }

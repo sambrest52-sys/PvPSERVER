@@ -19,6 +19,15 @@
         <module>dist</module>
     </modules>
 
+    <profiles>
+        <profile>
+            <id>smoke</id>
+            <modules>
+                <module>smoke-test</module>
+            </modules>
+        </profile>
+    </profiles>
+
     <properties>
         <java.version>21</java.version>
         <maven.compiler.release>21</maven.compiler.release>

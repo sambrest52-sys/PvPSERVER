@@ -3,7 +3,7 @@ version: '${project.version}'
 main: net.pvpserver.ffa.PvPFFA
 api-version: '1.21'
 author: PvPServer
-description: ${project.description}
+description: "${project.description}"
 depend: [PvPCore]
 softdepend: [PvPLobby]
 
