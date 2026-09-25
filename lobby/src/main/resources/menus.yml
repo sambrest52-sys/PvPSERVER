@@ -1,0 +1,65 @@
+# Lobby menu titles, filler and item templates (material, name, lore, glow, model).
+
+filler: GRAY_STAINED_GLASS_PANE
+
+titles:
+  settings: "<dark_gray>Settings"
+  cosmetics: "<dark_gray>Cosmetics"
+  cosmetics-kill-effects: "<dark_gray>Kill Effects"
+  cosmetics-death-animations: "<dark_gray>Death Animations"
+  cosmetics-join-messages: "<dark_gray>Join Messages"
+  stats: "<dark_gray><player>'s Stats"
+  leaderboards: "<dark_gray>Leaderboards: <stat>"
+  kit-editor: "<dark_gray>Kit Editor"
+  kit-editor-session: "<dark_gray>Editing <kit>"
+
+items:
+  back: {material: ARROW, name: "<gray>« Back"}
+  leaderboard-switch: {material: HOPPER, name: "<accent>Change statistic <gray>(Left/Right Click)"}
+  settings:
+    scoreboard: {material: PAINTING, name: "<primary>Scoreboard"}
+    duel-requests: {material: DIAMOND_SWORD, name: "<primary>Duel Requests"}
+    private-messages: {material: WRITABLE_BOOK, name: "<primary>Private Messages"}
+    party-invites: {material: NAME_TAG, name: "<primary>Party Invites"}
+    allow-spectators: {material: ENDER_EYE, name: "<primary>Allow Spectators"}
+    lobby-players: {material: PLAYER_HEAD, name: "<primary>Show Lobby Players"}
+    show-cosmetics: {material: BLAZE_POWDER, name: "<primary>Show Cosmetics"}
+    join-messages: {material: OAK_SIGN, name: "<primary>Join Messages"}
+    double-jump: {material: FEATHER, name: "<primary>Double Jump"}
+    time: {material: CLOCK, name: "<primary>Time of Day"}
+    cosmetics: {material: NETHER_STAR, name: "<accent>Cosmetics", lore: ["<gray>Kill effects, death animations", "<gray>and join messages."]}
+  cosmetics:
+    kill-effects: {material: DIAMOND_SWORD, name: "<accent>Kill Effects", lore: ["<gray>Played where you kill someone."]}
+    death-animations: {material: SKELETON_SKULL, name: "<accent>Death Animations", lore: ["<gray>Played where you die."]}
+    join-messages: {material: OAK_SIGN, name: "<accent>Join Messages", lore: ["<gray>Announced when you join."]}
+    none: {material: BARRIER, name: "<error>None"}
+  kit-editor:
+    save: {material: LIME_DYE, name: "<success><bold>Save layout"}
+    reset: {material: YELLOW_DYE, name: "<accent>Reset to default"}
+    cancel: {material: RED_DYE, name: "<error>Cancel"}
+
+lore:
+  setting-enabled: ["<gray>Status: <success>Enabled", "", "<gray>Click to toggle"]
+  setting-disabled: ["<gray>Status: <error>Disabled", "", "<gray>Click to toggle"]
+  time: ["<gray>Current: <white><time>", "", "<gray>Click to cycle"]
+  cosmetic-selected: ["<success>Selected"]
+  cosmetic-select: ["<gray>Click to select"]
+  cosmetic-locked: ["<error>Locked", "<gray>Unlock with a rank!"]
+  kit-editor-default: ["<gray>Layout: <white>default", "", "<gray>Click to edit"]
+  kit-editor-custom: ["<gray>Layout: <success>custom", "", "<gray>Left click to edit", "<gray>Right click to reset"]
+  kit-editor-help: ["<gray>Move items in your inventory", "<gray>to arrange your hotbar.", "", "<gray>Closing this menu saves."]
+  stats-header:
+    - "<gray>Global ELO: <white><elo>"
+    - "<gray>Rank: <white><rank>"
+    - "<gray>Play time: <white><playtime>"
+  stats-kit:
+    - "<gray>ELO: <white><elo>"
+    - "<gray>Wins: <success><wins></success> <dark_gray>|</dark_gray> Losses: <error><losses>"
+    - "<gray>Ranked: <white><ranked_wins>W / <ranked_losses>L"
+    - "<gray>Win rate: <white><win_rate>"
+    - "<gray>Win streak: <white><streak></white> <dark_gray>(best <best_streak>)"
+  stats-kit-ffa:
+    - ""
+    - "<gray>FFA kills: <white><ffa_kills></white> <dark_gray>|</dark_gray> Deaths: <white><ffa_deaths>"
+    - "<gray>FFA KDR: <white><ffa_kdr></white> <dark_gray>|</dark_gray> Rating: <white><ffa_elo>"
+    - "<gray>Best killstreak: <white><ffa_best_streak>"

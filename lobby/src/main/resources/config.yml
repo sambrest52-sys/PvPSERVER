@@ -1,0 +1,16 @@
+# PvPLobby configuration.
+
+# Lobby spawn (world;x;y;z;yaw;pitch). Set in-game with /setspawn. Empty = main world spawn.
+spawn: ""
+# Apply practice game rules (no mobs, weather, daylight cycle...) to the lobby world.
+tune-world: true
+# Players below this Y are teleported back to spawn.
+void-y: 0
+
+double-jump:
+  enabled: true
+  # Optional permission required to double jump ("" = everyone). Players can also toggle it in /settings.
+  permission: ""
+  forward: 1.2
+  up: 0.9
+  cooldown-ticks: 20

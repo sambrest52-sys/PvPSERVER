@@ -1,0 +1,36 @@
+# Lobby hotbars. Keys are slots (0-8). "action" selects what right-clicking does:
+#   queue-unranked, queue-ranked, leave-queue, ffa, spectate, party-create, party-info, party-fight,
+#   party-leave, kit-editor, stats, settings, cosmetics, leaderboards
+# Items use the same format as menus (material, name, lore, glow, amount, model).
+
+held-slot: 0
+
+layouts:
+  lobby:
+    0: {action: queue-unranked, material: IRON_SWORD, name: "<primary>Unranked Queue <gray>(Right Click)"}
+    1: {action: queue-ranked, material: DIAMOND_SWORD, name: "<accent>Ranked Queue <gray>(Right Click)"}
+    2: {action: ffa, material: GOLDEN_AXE, name: "<success>Free For All <gray>(Right Click)"}
+    3: {action: party-create, material: NAME_TAG, name: "<primary>Create Party <gray>(Right Click)"}
+    4: {action: spectate, material: ENDER_EYE, name: "<white>Spectate <gray>(Right Click)"}
+    5: {action: leaderboards, material: GOLD_INGOT, name: "<accent>Leaderboards <gray>(Right Click)"}
+    6: {action: kit-editor, material: BOOK, name: "<white>Kit Editor <gray>(Right Click)"}
+    7: {action: stats, material: PAPER, name: "<white>Your Stats <gray>(Right Click)"}
+    8: {action: settings, material: COMPARATOR, name: "<white>Settings <gray>(Right Click)"}
+  queue:
+    0: {action: leave-queue, material: RED_DYE, name: "<error>Leave Queue <gray>(Right Click)"}
+    7: {action: stats, material: PAPER, name: "<white>Your Stats <gray>(Right Click)"}
+    8: {action: settings, material: COMPARATOR, name: "<white>Settings <gray>(Right Click)"}
+  party-leader:
+    0: {action: party-fight, material: GOLDEN_SWORD, name: "<accent>Party Fight <gray>(Right Click)"}
+    1: {action: queue-unranked, material: IRON_SWORD, name: "<primary>2v2 Unranked Queue <gray>(Right Click)"}
+    2: {action: queue-ranked, material: DIAMOND_SWORD, name: "<accent>2v2 Ranked Queue <gray>(Right Click)"}
+    4: {action: party-info, material: PAPER, name: "<white>Party Info <gray>(Right Click)"}
+    6: {action: kit-editor, material: BOOK, name: "<white>Kit Editor <gray>(Right Click)"}
+    8: {action: party-leave, material: RED_DYE, name: "<error>Leave Party <gray>(Right Click)"}
+  party-member:
+    4: {action: party-info, material: PAPER, name: "<white>Party Info <gray>(Right Click)"}
+    6: {action: kit-editor, material: BOOK, name: "<white>Kit Editor <gray>(Right Click)"}
+    8: {action: party-leave, material: RED_DYE, name: "<error>Leave Party <gray>(Right Click)"}
+  party-queue:
+    0: {action: leave-queue, material: RED_DYE, name: "<error>Leave Queue <gray>(Right Click)"}
+    4: {action: party-info, material: PAPER, name: "<white>Party Info <gray>(Right Click)"}

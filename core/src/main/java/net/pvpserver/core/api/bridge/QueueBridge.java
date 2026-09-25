@@ -42,7 +42,20 @@ public interface QueueBridge {
 
     /**
      * @param uuid player id
-     * @return short description of the player's queue (kit, ranked, time), or null when not queued
+     * @return details of the player's queue entry, or null when not queued
      */
-    String describeQueue(UUID uuid);
+    QueueInfo info(UUID uuid);
+
+    /**
+     * Snapshot of a queue entry for sidebars.
+     *
+     * @param kit kit display name (MiniMessage)
+     * @param ranked ranked flag
+     * @param mode "1v1" / "2v2"
+     * @param waitedMillis time in queue
+     * @param minElo lower end of the current search range (ranked only)
+     * @param maxElo upper end of the current search range (ranked only)
+     */
+    record QueueInfo(String kit, boolean ranked, String mode, long waitedMillis, int minElo, int maxElo) {
+    }
 }

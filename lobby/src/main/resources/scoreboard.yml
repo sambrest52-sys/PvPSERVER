@@ -1,0 +1,44 @@
+# Sidebars for lobby-side states. Lines starting with "?flag " only show when the flag applies
+# (flags: party, queued, ranked; prefix with ! to negate). Max 15 lines.
+# Placeholders: <online> <in_fight> <in_queue> <in_ffa> <ping> <player> <elo> <rank> <party_size> <party_max>
+#               <party_leader> <queue_kit> <queue_type> <queue_mode> <queue_time> <queue_min> <queue_max>
+
+lobby:
+  title: "<primary><bold>PRACTICE"
+  lines:
+    - "<dark_gray><strikethrough>                          "
+    - "<gray>Online: <white><online>"
+    - "<gray>Fighting: <white><in_fight>"
+    - "<gray>Queueing: <white><in_queue>"
+    - "<gray>FFA: <white><in_ffa>"
+    - " "
+    - "<gray>Global ELO: <primary><elo>"
+    - "?party <gray>Party: <white><party_size>/<party_max>"
+    - "  "
+    - "<primary>yourserver.net"
+    - "<dark_gray><strikethrough>                          "
+
+queue:
+  title: "<primary><bold>PRACTICE"
+  lines:
+    - "<dark_gray><strikethrough>                          "
+    - "<gray>Online: <white><online>"
+    - "<gray>Fighting: <white><in_fight>"
+    - " "
+    - "<gray>Queue: <queue_kit>"
+    - "<gray>Type: <white><queue_type> <queue_mode>"
+    - "<gray>Time: <white><queue_time>"
+    - "?ranked <gray>Range: <white><queue_min> - <queue_max>"
+    - "  "
+    - "<primary>yourserver.net"
+    - "<dark_gray><strikethrough>                          "
+
+editing:
+  title: "<primary><bold>KIT EDITOR"
+  lines:
+    - "<dark_gray><strikethrough>                          "
+    - "<gray>Rearrange your items,"
+    - "<gray>then close the menu."
+    - " "
+    - "<primary>yourserver.net"
+    - "<dark_gray><strikethrough>                          "

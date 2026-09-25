@@ -1,0 +1,3 @@
+# Leaderboard holograms (TextDisplay entities). Create in-game with:
+#   /lbholo create <id> <kit|global> <ELO|WINS|RANKED_WINS|BEST_WIN_STREAK|FFA_KILLS|FFA_ELO|FFA_BEST_STREAK>
+holograms: {}

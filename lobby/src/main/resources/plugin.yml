@@ -1,0 +1,18 @@
+name: PvPLobby
+version: '${project.version}'
+main: net.pvpserver.lobby.PvPLobby
+api-version: '1.21'
+author: PvPServer
+description: ${project.description}
+depend: [PvPCore]
+
+permissions:
+  pvp.command.spawn: {default: true}
+  pvp.command.settings: {default: true}
+  pvp.command.cosmetics: {default: true}
+  pvp.command.leaderboard: {default: true}
+  pvp.command.kiteditor: {default: true}
+  pvp.command.stats: {default: true}
+  pvp.lobby.fly: {default: op, description: Use /fly in the lobby}
+  pvp.lobby.build: {default: op, description: Build in the lobby while in creative mode}
+  pvp.admin.lobby: {default: op, description: Set the spawn and manage holograms}
