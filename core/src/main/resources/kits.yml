@@ -1,0 +1,232 @@
+# Kits. Each kit has display info, availability flags, a knockback profile (kb.yml, or "vanilla"),
+# arena tags (arenas.yml) or an explicit arena whitelist, rules, armor, items and effects.
+#
+# Item keys: material, amount, name, lore, enchants ["sharpness:3"], unbreakable, potion (e.g. strong_healing),
+#            color ("#RRGGBB" for leather), glow, tag (golden_head = golden head effects from config.yml).
+# "slot" is the default inventory slot (0-8 hotbar, 9-35 inventory). "fill" fills every empty slot.
+#
+# Rules (defaults in brackets):
+#   hunger [true]           food drains
+#   regen [VANILLA]         VANILLA | LEGACY (1.8: 1 HP / 4s when food >= 18) | NONE (UHC)
+#   build [false]           blocks may be placed (below the arena build limit)
+#   break-placed-only [true] only blocks placed during the match may be broken
+#   health-display [true]   hearts under player names
+#   hit-delay [20]          max no-damage ticks. 20 = vanilla (a hit every 10 ticks), lower = faster combos
+#   old-combat [false]      1.8 style: no attack cooldown, no sweep attacks
+#   fall-damage [true], pearl-cooldown [15], gapple-cooldown [0], potion-velocity [1.0]
+#   no-damage [false]       hits register (knockback/boxing) but deal no damage
+#   sumo [false]            touching water / falling below the arena loses the round
+#   boxing [false] / boxing-hits [100]  first to N hits wins
+#   bridge [false] / bridge-goals [3]   score by jumping into the enemy goal
+#   rounds [1]              default rounds to win (duel requests can override)
+#   max-duration [900]      seconds until the match ends in a draw (0 = unlimited)
+#   drop-items [false]      allow dropping items (bottles/bowls are always removed)
+
+kits:
+  nodebuff:
+    display-name: "<aqua>NoDebuff"
+    order: 1
+    ranked: true
+    unranked: true
+    ffa: true
+    knockback: default
+    arena-tags: [standard]
+    icon: {material: SPLASH_POTION, potion: strong_healing}
+    rules: {old-combat: true, regen: LEGACY, pearl-cooldown: 15}
+    armor:
+      helmet: {material: DIAMOND_HELMET, enchants: ["protection:2", "unbreaking:3"]}
+      chestplate: {material: DIAMOND_CHESTPLATE, enchants: ["protection:2", "unbreaking:3"]}
+      leggings: {material: DIAMOND_LEGGINGS, enchants: ["protection:2", "unbreaking:3"]}
+      boots: {material: DIAMOND_BOOTS, enchants: ["protection:2", "unbreaking:3", "feather_falling:4"]}
+    items:
+      - {slot: 0, material: DIAMOND_SWORD, enchants: ["sharpness:3", "fire_aspect:2", "unbreaking:3"]}
+      - {slot: 1, material: ENDER_PEARL, amount: 16}
+      - {slot: 2, material: POTION, potion: strong_swiftness}
+      - {slot: 3, material: POTION, potion: long_fire_resistance}
+      - {slot: 8, material: COOKED_BEEF, amount: 64}
+      - {slot: 17, material: POTION, potion: strong_swiftness}
+      - {slot: 26, material: POTION, potion: strong_swiftness}
+      - {slot: 35, material: POTION, potion: strong_swiftness}
+    fill: {material: SPLASH_POTION, potion: strong_healing}
+
+  debuff:
+    display-name: "<dark_aqua>Debuff"
+    order: 2
+    ranked: true
+    unranked: true
+    ffa: false
+    knockback: default
+    arena-tags: [standard]
+    icon: {material: SPLASH_POTION, potion: strong_poison}
+    rules: {old-combat: true, regen: LEGACY}
+    armor:
+      helmet: {material: DIAMOND_HELMET, enchants: ["protection:2", "unbreaking:3"]}
+      chestplate: {material: DIAMOND_CHESTPLATE, enchants: ["protection:2", "unbreaking:3"]}
+      leggings: {material: DIAMOND_LEGGINGS, enchants: ["protection:2", "unbreaking:3"]}
+      boots: {material: DIAMOND_BOOTS, enchants: ["protection:2", "unbreaking:3", "feather_falling:4"]}
+    items:
+      - {slot: 0, material: DIAMOND_SWORD, enchants: ["sharpness:3", "fire_aspect:2", "unbreaking:3"]}
+      - {slot: 1, material: ENDER_PEARL, amount: 16}
+      - {slot: 2, material: POTION, potion: strong_swiftness}
+      - {slot: 3, material: POTION, potion: long_fire_resistance}
+      - {slot: 4, material: SPLASH_POTION, potion: poison}
+      - {slot: 5, material: SPLASH_POTION, potion: slowness}
+      - {slot: 8, material: COOKED_BEEF, amount: 64}
+      - {slot: 13, material: SPLASH_POTION, potion: poison}
+      - {slot: 14, material: SPLASH_POTION, potion: slowness}
+      - {slot: 17, material: POTION, potion: strong_swiftness}
+      - {slot: 26, material: POTION, potion: strong_swiftness}
+    fill: {material: SPLASH_POTION, potion: strong_healing}
+
+  gapple:
+    display-name: "<gold>Gapple"
+    order: 3
+    ranked: true
+    unranked: true
+    ffa: true
+    knockback: default
+    arena-tags: [standard]
+    icon: {material: ENCHANTED_GOLDEN_APPLE}
+    rules: {old-combat: true, regen: VANILLA, max-duration: 1200}
+    armor:
+      helmet: {material: DIAMOND_HELMET, enchants: ["protection:4", "unbreaking:3"]}
+      chestplate: {material: DIAMOND_CHESTPLATE, enchants: ["protection:4", "unbreaking:3"]}
+      leggings: {material: DIAMOND_LEGGINGS, enchants: ["protection:4", "unbreaking:3"]}
+      boots: {material: DIAMOND_BOOTS, enchants: ["protection:4", "unbreaking:3"]}
+    items:
+      - {slot: 0, material: DIAMOND_SWORD, enchants: ["sharpness:5", "fire_aspect:2", "unbreaking:3"]}
+      - {slot: 1, material: ENCHANTED_GOLDEN_APPLE, amount: 64}
+      - {slot: 2, material: POTION, potion: long_strength}
+      - {slot: 3, material: POTION, potion: long_swiftness}
+      - {slot: 9, material: DIAMOND_HELMET, enchants: ["protection:4", "unbreaking:3"]}
+      - {slot: 10, material: DIAMOND_CHESTPLATE, enchants: ["protection:4", "unbreaking:3"]}
+      - {slot: 11, material: DIAMOND_LEGGINGS, enchants: ["protection:4", "unbreaking:3"]}
+      - {slot: 12, material: DIAMOND_BOOTS, enchants: ["protection:4", "unbreaking:3"]}
+      - {slot: 20, material: POTION, potion: long_strength}
+      - {slot: 21, material: POTION, potion: long_swiftness}
+
+  sumo:
+    display-name: "<yellow>Sumo"
+    order: 4
+    ranked: true
+    unranked: true
+    ffa: false
+    editable: false
+    knockback: sumo
+    arena-tags: [sumo]
+    icon: {material: LEAD}
+    rules: {hunger: false, no-damage: true, sumo: true, fall-damage: false, old-combat: true, health-display: false, max-duration: 300}
+
+  boxing:
+    display-name: "<red>Boxing"
+    order: 5
+    ranked: true
+    unranked: true
+    ffa: false
+    knockback: boxing
+    arena-tags: [standard]
+    icon: {material: DIAMOND_SWORD}
+    effects: ["speed:1:-1"]
+    rules: {hunger: false, no-damage: true, boxing: true, boxing-hits: 100, old-combat: true, health-display: false, max-duration: 600}
+    items:
+      - {slot: 0, material: DIAMOND_SWORD, enchants: ["sharpness:1"], unbreakable: true}
+
+  combo:
+    display-name: "<light_purple>Combo"
+    order: 6
+    ranked: true
+    unranked: true
+    ffa: false
+    knockback: combo
+    arena-tags: [standard]
+    icon: {material: PUFFERFISH}
+    rules: {hit-delay: 3, old-combat: true, fall-damage: false, hunger: false, regen: VANILLA}
+    armor:
+      helmet: {material: DIAMOND_HELMET, enchants: ["protection:3"], unbreakable: true}
+      chestplate: {material: DIAMOND_CHESTPLATE, enchants: ["protection:3"], unbreakable: true}
+      leggings: {material: DIAMOND_LEGGINGS, enchants: ["protection:3"], unbreakable: true}
+      boots: {material: DIAMOND_BOOTS, enchants: ["protection:3"], unbreakable: true}
+    items:
+      - {slot: 0, material: DIAMOND_SWORD, enchants: ["sharpness:2"], unbreakable: true}
+      - {slot: 1, material: ENCHANTED_GOLDEN_APPLE, amount: 64}
+      - {slot: 2, material: POTION, potion: long_strength}
+      - {slot: 3, material: POTION, potion: long_swiftness}
+
+  builduhc:
+    display-name: "<green>BuildUHC"
+    order: 7
+    ranked: true
+    unranked: true
+    ffa: false
+    knockback: default
+    arena-tags: [build]
+    icon: {material: LAVA_BUCKET}
+    rules: {build: true, break-placed-only: true, regen: NONE, old-combat: true, pearl-cooldown: 0, max-duration: 1200}
+    armor:
+      helmet: {material: DIAMOND_HELMET, enchants: ["protection:2"]}
+      chestplate: {material: DIAMOND_CHESTPLATE, enchants: ["protection:2"]}
+      leggings: {material: DIAMOND_LEGGINGS, enchants: ["protection:2"]}
+      boots: {material: DIAMOND_BOOTS, enchants: ["protection:2"]}
+    items:
+      - {slot: 0, material: DIAMOND_SWORD, enchants: ["sharpness:3"]}
+      - {slot: 1, material: FISHING_ROD}
+      - {slot: 2, material: BOW, enchants: ["power:3"]}
+      - {slot: 3, material: COBBLESTONE, amount: 64}
+      - {slot: 4, material: WATER_BUCKET}
+      - {slot: 5, material: LAVA_BUCKET}
+      - {slot: 6, material: GOLDEN_APPLE, amount: 6}
+      - {slot: 7, material: GOLDEN_APPLE, amount: 3, name: "<gold>Golden Head", tag: golden_head}
+      - {slot: 8, material: OAK_PLANKS, amount: 64}
+      - {slot: 9, material: ARROW, amount: 32}
+      - {slot: 10, material: DIAMOND_PICKAXE, enchants: ["efficiency:3"]}
+      - {slot: 11, material: DIAMOND_AXE, enchants: ["efficiency:3"]}
+      - {slot: 12, material: WATER_BUCKET}
+      - {slot: 13, material: LAVA_BUCKET}
+      - {slot: 14, material: COBBLESTONE, amount: 64}
+      - {slot: 15, material: COOKED_BEEF, amount: 16}
+
+  classic:
+    display-name: "<white>Classic"
+    order: 8
+    ranked: true
+    unranked: true
+    ffa: true
+    knockback: default
+    arena-tags: [standard]
+    icon: {material: BOW}
+    rules: {old-combat: true, regen: LEGACY, pearl-cooldown: 0}
+    armor:
+      helmet: {material: DIAMOND_HELMET}
+      chestplate: {material: DIAMOND_CHESTPLATE}
+      leggings: {material: DIAMOND_LEGGINGS}
+      boots: {material: DIAMOND_BOOTS}
+    items:
+      - {slot: 0, material: DIAMOND_SWORD}
+      - {slot: 1, material: FISHING_ROD}
+      - {slot: 2, material: BOW}
+      - {slot: 3, material: GOLDEN_APPLE, amount: 8}
+      - {slot: 8, material: COOKED_BEEF, amount: 16}
+      - {slot: 9, material: ARROW, amount: 32}
+
+  bridge:
+    display-name: "<blue>Bridge"
+    order: 9
+    ranked: true
+    unranked: true
+    ffa: false
+    knockback: default
+    arena-tags: [bridge]
+    icon: {material: BLUE_TERRACOTTA}
+    rules: {build: true, break-placed-only: true, bridge: true, bridge-goals: 3, hunger: false, fall-damage: false, old-combat: true, pearl-cooldown: 0, max-duration: 900}
+    armor:
+      chestplate: {material: LEATHER_CHESTPLATE, unbreakable: true}
+      leggings: {material: LEATHER_LEGGINGS, unbreakable: true}
+      boots: {material: LEATHER_BOOTS, unbreakable: true}
+    items:
+      - {slot: 0, material: IRON_SWORD, unbreakable: true}
+      - {slot: 1, material: BOW, unbreakable: true}
+      - {slot: 2, material: DIAMOND_PICKAXE, enchants: ["efficiency:2"], unbreakable: true}
+      - {slot: 3, material: WHITE_TERRACOTTA, amount: 64}
+      - {slot: 4, material: WHITE_TERRACOTTA, amount: 64}
+      - {slot: 5, material: GOLDEN_APPLE, amount: 8}
+      - {slot: 8, material: ARROW, amount: 1}

@@ -1,0 +1,50 @@
+name: PvPCore
+version: '${project.version}'
+main: net.pvpserver.core.PvPCore
+api-version: '1.21'
+load: POSTWORLD
+author: PvPServer
+description: ${project.description}
+softdepend: [LuckPerms]
+
+# Commands are registered through Paper's Brigadier API (see CommandRegistrar); only permissions live here.
+permissions:
+  pvp.command.party: {default: true, description: Use /party and /pc}
+  pvp.command.msg: {default: true, description: Use /msg and /r}
+  pvp.command.ignore: {default: true, description: Use /ignore and /unignore}
+  pvp.command.report: {default: true, description: Use /report}
+  pvp.party.large: {default: false, description: Larger maximum party size}
+  pvp.chat.color: {default: false, description: Use colour tags in chat}
+  pvp.chat.bypass: {default: op, description: Bypass slow mode, filter and chat mute}
+  pvp.chat.admin: {default: op, description: Use /chat slow|clear|mute}
+  pvp.staff:
+    default: op
+    description: Staff member (staff chat, alerts, bypasses)
+    children:
+      pvp.staff.chat: true
+      pvp.staff.alerts: true
+      pvp.staff.vanish: true
+      pvp.staff.vanish.see: true
+      pvp.staff.freeze: true
+      pvp.staff.reports: true
+      pvp.staff.socialspy: true
+      pvp.moderation.kick: true
+      pvp.moderation.warn: true
+      pvp.moderation.mute: true
+      pvp.moderation.tempmute: true
+      pvp.moderation.unmute: true
+      pvp.moderation.tempban: true
+      pvp.moderation.history: true
+  pvp.moderation.ban: {default: op}
+  pvp.moderation.unban: {default: op}
+  pvp.moderation.exempt: {default: false, description: Cannot be punished by other staff}
+  pvp.moderation.override: {default: op, description: Punish exempt players}
+  pvp.admin:
+    default: op
+    description: Practice administration
+    children:
+      pvp.admin.reload: true
+      pvp.admin.arena: true
+      pvp.admin.kb: true
+      pvp.admin.rank: true
+      pvp.admin.stats: true

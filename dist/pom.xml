@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>net.pvpserver</groupId>
+        <artifactId>pvp-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <!-- Copies the four plugin jars into ../server/plugins after `mvn clean package`. -->
+    <artifactId>pvp-dist</artifactId>
+    <packaging>pom</packaging>
+    <name>PvP Distribution</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>net.pvpserver</groupId>
+            <artifactId>pvp-core</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.pvpserver</groupId>
+            <artifactId>pvp-lobby</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.pvpserver</groupId>
+            <artifactId>pvp-duels</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.pvpserver</groupId>
+            <artifactId>pvp-ffa</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-plugins</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/../server/plugins</outputDirectory>
+                            <overWriteReleases>true</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>net.pvpserver</groupId>
+                                    <artifactId>pvp-core</artifactId>
+                                    <version>${project.version}</version>
+                                    <destFileName>PvPCore.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>net.pvpserver</groupId>
+                                    <artifactId>pvp-lobby</artifactId>
+                                    <version>${project.version}</version>
+                                    <destFileName>PvPLobby.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>net.pvpserver</groupId>
+                                    <artifactId>pvp-duels</artifactId>
+                                    <version>${project.version}</version>
+                                    <destFileName>PvPDuels.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>net.pvpserver</groupId>
+                                    <artifactId>pvp-ffa</artifactId>
+                                    <version>${project.version}</version>
+                                    <destFileName>PvPFFA.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

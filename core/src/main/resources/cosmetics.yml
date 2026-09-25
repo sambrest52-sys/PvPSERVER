@@ -1,0 +1,25 @@
+# Cosmetics. Built-in effect ids:
+#   kill-effects: lightning, explosion, blood, flames, hearts, firework, souls, notes
+#   death-animations: smoke, totem, spiral, ascend
+# Omit "permission" to make a cosmetic free. Join messages support <player>.
+
+kill-effects:
+  hearts: {display: "<red>Hearts", icon: RED_DYE, permission: pvp.cosmetic.kill.hearts}
+  flames: {display: "<gold>Flames", icon: BLAZE_POWDER, permission: pvp.cosmetic.kill.flames}
+  blood: {display: "<dark_red>Blood", icon: REDSTONE, permission: pvp.cosmetic.kill.blood}
+  lightning: {display: "<yellow>Lightning", icon: LIGHTNING_ROD, permission: pvp.cosmetic.kill.lightning}
+  explosion: {display: "<gray>Explosion", icon: TNT, permission: pvp.cosmetic.kill.explosion}
+  firework: {display: "<light_purple>Firework", icon: FIREWORK_ROCKET, permission: pvp.cosmetic.kill.firework}
+  souls: {display: "<aqua>Souls", icon: SOUL_LANTERN, permission: pvp.cosmetic.kill.souls}
+  notes: {display: "<green>Notes", icon: NOTE_BLOCK, permission: pvp.cosmetic.kill.notes}
+
+death-animations:
+  smoke: {display: "<gray>Smoke", icon: GRAY_DYE, permission: pvp.cosmetic.death.smoke}
+  totem: {display: "<gold>Totem", icon: TOTEM_OF_UNDYING, permission: pvp.cosmetic.death.totem}
+  spiral: {display: "<red>Spiral", icon: REDSTONE_TORCH, permission: pvp.cosmetic.death.spiral}
+  ascend: {display: "<aqua>Ascend", icon: SOUL_TORCH, permission: pvp.cosmetic.death.ascend}
+
+join-messages:
+  vip: {display: "<green>VIP Arrival", icon: EMERALD, permission: pvp.cosmetic.join.vip, message: "<green>✦ <white><player></white> has joined the lobby!"}
+  legend: {display: "<gold>Legendary", icon: GOLD_INGOT, permission: pvp.cosmetic.join.legend, message: "<gold><bold>»</bold> <yellow><player></yellow> <gold>descends upon the lobby <bold>«</bold>"}
+  storm: {display: "<aqua>Storm", icon: TRIDENT, permission: pvp.cosmetic.join.storm, message: "<aqua>⚡ <white><player></white> <aqua>rode in on a storm."}
