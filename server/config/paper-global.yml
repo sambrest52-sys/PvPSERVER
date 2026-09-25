@@ -1,0 +1,11 @@
+# Only practice-relevant overrides; Paper fills in every other key with its default on first start.
+_version: 31
+collisions:
+  # Players pushing each other is noise in a practice lobby and in 2v2 fights.
+  enable-player-collisions: false
+chunk-loading-basic:
+  player-max-chunk-send-rate: 60.0
+  player-max-chunk-load-rate: 80.0
+misc:
+  enable-nether: false
+  max-joins-per-tick: 5

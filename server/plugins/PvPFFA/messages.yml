@@ -1,0 +1,33 @@
+# PvPFFA messages. Missing keys fall back to PvPCore's messages.yml.
+
+ffa:
+  joined: "<prefix><gray>Joined <white><arena></white> (<kit><gray>) <dark_gray>- <players> playing"
+  left: "<prefix><gray>You left FFA."
+  not-ready: "<prefix><error>FFA arenas are still loading, try again in a moment."
+  busy: "<prefix><error>You can only join FFA from the lobby."
+  leave-party: "<prefix><error>Leave your party to play FFA."
+  not-in-ffa: "<prefix><error>You are not in FFA."
+  unknown-arena: "<prefix><error>Unknown FFA arena <arena>."
+  killed: "<error><victim></error> <gray>was killed by <white><killer></white> <dark_gray>(<health>❤)"
+  killed-ranked: "<error><victim></error> <gray>was killed by <white><killer></white> <dark_gray>(<health>❤, +<rating> rating)"
+  died: "<error><victim></error> <gray>died."
+  combat-logged: "<error><victim></error> <gray>logged out in combat<gray>!"
+  streak: "<accent><bold>STREAK!</bold></accent> <white><player></white> <gray>is on a <accent><streak></accent> killstreak!"
+  streak-ended: "<gray><white><killer></white> ended <white><victim></white>'s <accent><lost_streak></accent> killstreak!"
+  command-blocked: "<prefix><error>You are in combat! Wait <seconds>s."
+  safe-zone-tagged: "<error>You can't enter the safe zone while in combat."
+  safe-zone-attack: "<error>You can't attack from the safe zone."
+  list-entry: " <dark_gray>•</dark_gray> <white><arena></white> <dark_gray>-</dark_gray> <kit> <gray><type>, <players> playing"
+
+menu:
+  arena-lore:
+    - "<gray>Kit: <kit>"
+    - "<gray>Playing: <white><players>"
+    - ""
+    - "<gray>Click to join"
+  arena-lore-ranked:
+    - "<gray>Kit: <kit>"
+    - "<gray>Playing: <white><players>"
+    - "<accent>Ranked: kills change your FFA rating"
+    - ""
+    - "<gray>Click to join"

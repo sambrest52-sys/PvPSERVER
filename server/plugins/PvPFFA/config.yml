@@ -1,0 +1,77 @@
+# PvPFFA configuration.
+
+# Disposable void world holding the FFA arenas (recreated and re-pasted on every start).
+world: pvp_ffa
+menu-title: "<dark_gray>Free For All"
+allow-parties: true
+
+# Each arena pastes a core arena template (arenas.yml) once at startup and uses one kit.
+#   ranked: kills adjust the per-kit FFA rating
+#   knockback: knockback profile override ("" = kit profile)
+#   safe-zone-radius: no combat within this radius of a spawn; combat-tagged players can't re-enter
+#   spawns: optional list of "x,y,z,yaw,pitch" relative to the template (default: the template's spawn A and B)
+arenas:
+  nodebuff:
+    display-name: "<aqua>NoDebuff FFA"
+    kit: nodebuff
+    template: classic
+    ranked: false
+    icon: SPLASH_POTION
+    safe-zone-radius: 5
+  nodebuff-ranked:
+    display-name: "<aqua>NoDebuff FFA <accent>(Ranked)"
+    kit: nodebuff
+    template: classic
+    ranked: true
+    icon: DIAMOND_SWORD
+    safe-zone-radius: 5
+  gapple:
+    display-name: "<gold>Gapple FFA"
+    kit: gapple
+    template: nether
+    ranked: false
+    icon: ENCHANTED_GOLDEN_APPLE
+    safe-zone-radius: 5
+  classic:
+    display-name: "<white>Classic FFA"
+    kit: classic
+    template: classic
+    ranked: false
+    icon: BOW
+    safe-zone-radius: 5
+
+respawn:
+  # Invulnerability after (re)spawning; ends early when you attack.
+  protection-seconds: 2
+
+kill-rewards:
+  heal: true
+  # Refill empty kit slots (used potions, pearls...) on every kill.
+  refill-kit: true
+  items: []
+
+killstreaks:
+  broadcast-every: 5
+  announce-ended-at: 5
+  # Rewards at an exact streak: items (kit item format), effects ("type:amplifier:seconds"), console commands (<player>).
+  rewards:
+    5:
+      effects: ["speed:0:15"]
+      items:
+        - {material: GOLDEN_APPLE, amount: 1}
+    10:
+      effects: ["strength:0:10", "speed:1:15"]
+      items:
+        - {material: ENDER_PEARL, amount: 2}
+      commands: []
+
+combat-log:
+  # Logging out while combat tagged counts as a death and credits the last attacker.
+  punish: true
+  # Extra FFA rating lost in ranked arenas for combat logging.
+  rating-penalty: 10
+  # Commands blocked while combat tagged ("*" blocks everything).
+  blocked-commands: [spawn, lobby, hub, l, leave, ffa, kiteditor, duel]
+
+# Player-placed blocks (build kits) disappear after this many seconds.
+block-decay-seconds: 10

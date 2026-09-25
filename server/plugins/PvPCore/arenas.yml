@@ -1,0 +1,6 @@
+# Arena definitions. Positions are relative to the template's minimum corner ("x,y,z,yaw,pitch").
+# Templates live in arenas/<name>.arena and are created with /arena create|edit ... /arena save.
+# Placeholder arenas (classic, nether, sumo, bridge) are generated on first start when the folder is empty.
+#
+# goal-a is the goal team A defends (team B scores by jumping into it); goal-b likewise.
+arenas: {}

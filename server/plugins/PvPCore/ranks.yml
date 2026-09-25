@@ -1,0 +1,66 @@
+# Built-in ranks. provider: auto (LuckPerms when installed, else built-in) | builtin | luckperms.
+# With LuckPerms active, prefixes and tab order come from LuckPerms and the permissions below are ignored.
+# Permissions support "node.*" and "*" wildcards (expanded to registered permissions) and "-node" negation.
+provider: auto
+default-rank: default
+
+ranks:
+  default:
+    display: "Default"
+    prefix: ""
+    name-color: "<gray>"
+    weight: 0
+    permissions: []
+  vip:
+    display: "VIP"
+    prefix: "<green>[VIP] "
+    name-color: "<green>"
+    weight: 10
+    inherits: default
+    permissions:
+      - pvp.cosmetic.kill.hearts
+      - pvp.cosmetic.kill.flames
+      - pvp.cosmetic.death.smoke
+      - pvp.cosmetic.join.vip
+      - pvp.lobby.fly
+  mvp:
+    display: "MVP"
+    prefix: "<aqua>[MVP] "
+    name-color: "<aqua>"
+    weight: 20
+    inherits: vip
+    permissions:
+      - pvp.cosmetic.*
+      - pvp.chat.color
+      - pvp.party.large
+  mod:
+    display: "Mod"
+    prefix: "<dark_purple>[Mod] "
+    name-color: "<light_purple>"
+    weight: 80
+    inherits: mvp
+    staff: true
+    permissions:
+      - pvp.staff
+      - pvp.chat.bypass
+  admin:
+    display: "Admin"
+    prefix: "<red>[Admin] "
+    name-color: "<red>"
+    weight: 90
+    inherits: mod
+    staff: true
+    permissions:
+      - pvp.moderation.*
+      - pvp.admin
+      - pvp.chat.admin
+  owner:
+    display: "Owner"
+    prefix: "<dark_red><bold>[Owner]</bold> "
+    name-color: "<dark_red>"
+    weight: 100
+    inherits: admin
+    staff: true
+    permissions:
+      - "*"
+      - "-pvp.moderation.exempt"

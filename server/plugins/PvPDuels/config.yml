@@ -1,0 +1,30 @@
+# PvPDuels configuration.
+
+match:
+  countdown-seconds: 5
+  # Pause between rounds of a best-of match (the arena is reset meanwhile).
+  round-delay-seconds: 3
+  # Time on the winner screen before everybody returns to the lobby.
+  end-delay-seconds: 4
+  # Freeze after each Bridge goal.
+  bridge-countdown-seconds: 3
+  # How long post-match inventories stay viewable.
+  snapshot-seconds: 300
+
+queue:
+  # How often matchmaking runs.
+  match-interval-ticks: 20
+  # Ranked search window: starts at +/- base, grows by step every interval-seconds, capped at max.
+  elo-range:
+    base: 50
+    step: 25
+    interval-seconds: 5
+    max: 500
+  # Unranked wins required (per kit) before ranked unlocks. 0 = disabled.
+  ranked-required-unranked-wins: 0
+
+requests:
+  expire-seconds: 30
+  rematch-seconds: 30
+  # Maximum "first to N" rounds selectable in the duel menu.
+  max-rounds: 5

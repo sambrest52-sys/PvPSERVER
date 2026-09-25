@@ -1,0 +1,48 @@
+# PvPLobby messages. Missing keys fall back to PvPCore's messages.yml (theme tags such as <primary> work here).
+
+lobby:
+  welcome:
+    - ""
+    - "  <primary><bold>Welcome to Practice, <white><player></white>!"
+    - "  <gray>There are <white><online></white> players online. Right-click the items in your hotbar to play."
+    - ""
+  spawn-set: "<prefix><success>Lobby spawn set."
+  combat-tagged: "<prefix><error>You can't do that while in combat."
+  in-match: "<prefix><error>You can't leave during a match. Use /leave to forfeit."
+  fly-on: "<prefix><gray>Flight <success>enabled</success>."
+  fly-off: "<prefix><gray>Flight <error>disabled</error>."
+  fly-lobby-only: "<prefix><error>You can only fly in the lobby."
+
+settings:
+  enabled: "<prefix><white><setting></white> <success>enabled</success>."
+  disabled: "<prefix><white><setting></white> <error>disabled</error>."
+
+cosmetics:
+  locked: "<prefix><error>You haven't unlocked that cosmetic."
+  selected: "<prefix><gray>Selected <cosmetic><gray>."
+
+kit-editor:
+  busy: "<prefix><error>You can only edit kits in the lobby."
+  not-editable: "<prefix><error>That kit can't be edited."
+  started:
+    - "<prefix><gray>Editing <kit><gray>. Rearrange the items in your inventory."
+    - "<prefix><gray>Close the menu or click <success>Save</success> when done."
+  saved: "<prefix><success>Saved your <kit> <success>layout."
+  cancelled: "<prefix><gray>Kit editing cancelled."
+  reset: "<prefix><gray>Reset your <kit> <gray>layout to the default."
+
+leaderboard:
+  empty: "<gray>No entries yet"
+  line: "<accent>#<position></accent> <white><player></white> <dark_gray>-</dark_gray> <primary><value>"
+
+hologram:
+  title: "<kit> <gray><stat> Leaderboard"
+  line: "<accent>#<position></accent> <white><player></white> <dark_gray>-</dark_gray> <primary><value>"
+  empty: "<gray>No entries yet"
+  footer: "<dark_gray>Updates every few minutes"
+  created: "<prefix><success>Hologram <id> created."
+  deleted: "<prefix><gray>Hologram <id> deleted."
+  not-found: "<prefix><error>Hologram <id> not found."
+  invalid: "<prefix><error>Unknown kit or statistic."
+  list: "<prefix><gray>Holograms: <white><ids>"
+  reloaded: "<prefix><success>Holograms reloaded."

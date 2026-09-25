@@ -1,0 +1,120 @@
+# PvPCore configuration. Every value here can be reloaded with /pvpadmin reload unless noted.
+
+storage:
+  # SQLITE (default, zero setup), MYSQL or MARIADB. Changing this requires a restart.
+  type: SQLITE
+  table-prefix: "pvp_"
+  threads: 4
+  sqlite:
+    file: "data/practice.db"
+  mysql:
+    host: localhost
+    port: 3306
+    database: practice
+    username: root
+    password: ""
+    parameters: "?useSSL=false&characterEncoding=utf8&allowPublicKeyRetrieval=true"
+  pool:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    max-lifetime-ms: 1800000
+    connection-timeout-ms: 10000
+
+profiles:
+  autosave-seconds: 300
+
+elo:
+  starting: 1000
+  k-factor: 32
+  ffa-k-factor: 16
+  floor: 0
+  # Minimum ELO a winner gains, even against a much lower rated opponent.
+  min-change: 1
+
+combat:
+  # Attack speed used for kits with old-combat: true (removes the 1.9+ attack cooldown).
+  old-combat-attack-speed: 1024.0
+  combat-tag-seconds: 15
+  # How long the last attacker is credited for void/fall deaths.
+  kill-credit-seconds: 12
+  remove-empty-bottles: true
+  # Extra effects for golden heads (items with tag: golden_head in kits.yml): effect:amplifier:seconds
+  golden-head-effects:
+    - "regeneration:1:9"
+    - "absorption:0:120"
+
+party:
+  max-size: 8
+  # For players with pvp.party.large
+  max-size-large: 16
+  invite-seconds: 60
+
+arenas:
+  # Disposable void world for arena instances; deleted and recreated on every start (crash cleanup).
+  world: pvp_arenas
+  # Persistent void world used by /arena edit.
+  editor-world: pvp_editor
+  slot-spacing: 512
+  grid-width: 32
+  paste-y: 64
+  max-instances: 150
+  max-idle-per-arena: 6
+  prewarm-per-arena: 2
+  instance-margin: 16
+  # Block placement budget for pasting / resetting arenas (per tick).
+  blocks-per-tick: 20000
+  max-millis-per-tick: 8
+
+scoreboard:
+  # Each player's sidebar refreshes every N ticks; players are spread across ticks.
+  update-interval-ticks: 10
+
+tab:
+  enabled: true
+  update-interval-ticks: 40
+  name-format: "<prefix><name>"
+  header:
+    - ""
+    - "<primary><bold>PRACTICE</bold>"
+    - "<gray>play.yourserver.net"
+    - ""
+  footer:
+    - ""
+    - "<gray>Online: <white><online></white>  <dark_gray>|</dark_gray>  Fighting: <white><in_fight></white>  <dark_gray>|</dark_gray>  Queued: <white><in_queue></white>"
+    - "<gray>Ping: <white><ping>ms</white>  <dark_gray>|</dark_gray>  TPS: <white><tps></white>"
+    - ""
+
+chat:
+  format: "<prefix><name><dark_gray> » </dark_gray><white><message>"
+  slow-mode-seconds: 0
+  block-duplicates: true
+  filter:
+    # CENSOR replaces matched words, BLOCK drops the message and alerts staff.
+    action: CENSOR
+    replacement: "***"
+    block-links: true
+    words:
+      - "badword"
+      - "anotherbadword"
+
+moderation:
+  # Announce punishments to everyone (otherwise staff only). "-s" always keeps it silent.
+  broadcast-public: false
+  report-cooldown-seconds: 60
+  frozen-allowed-commands: [msg, r, reply, sc, staffchat]
+
+anticheat:
+  # Alert-only helper checks. They never punish; plug a real anticheat in for enforcement.
+  enabled: true
+  alert-cooldown-ms: 5000
+  cps:
+    enabled: true
+    max: 20
+  reach:
+    enabled: true
+    max: 3.1
+    ping-compensation-per-ms: 0.003
+
+leaderboards:
+  refresh-seconds: 300
+  size: 10

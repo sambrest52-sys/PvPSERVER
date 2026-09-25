@@ -1,0 +1,27 @@
+# Only practice-relevant overrides; Paper fills in every other key with its default on first start.
+_version: 31
+anticheat:
+  anti-xray:
+    enabled: false
+chunks:
+  auto-save-interval: 6000
+  max-auto-save-chunks-per-tick: 8
+  delay-chunk-unloads-by: 10s
+collisions:
+  max-entity-collisions: 2
+environment:
+  optimize-explosions: true
+  disable-ice-and-snow: true
+  disable-thunder: true
+entities:
+  spawning:
+    per-player-mob-spawns: true
+hopper:
+  disable-move-event: true
+misc:
+  redstone-implementation: ALTERNATE_CURRENT
+  # Thrown potions/pearls ignore the thrower's momentum, so pots land where you aim (1.8 feel).
+  disable-relative-projectile-velocity: true
+tick-rates:
+  grass-spread: 4
+  container-update: 1

@@ -1,0 +1,45 @@
+# Knockback profiles. Edit in-game with /kb set <profile> <field> <value> (saved here, applied instantly).
+# Kits pick a profile with "knockback: <name>" in kits.yml ("vanilla" disables custom knockback).
+#
+# horizontal / vertical          base knockback added along the attacker->victim direction
+# friction                       divisor for the victim's existing velocity (2.0 = 1.8 behaviour)
+# extra-horizontal / -vertical   added per sprint/knockback-enchant level along the attacker's facing
+# vertical-limit                 cap on the resulting upward velocity
+# air-horizontal-multiplier      scales horizontal knockback while the victim is airborne
+
+enabled: true
+default-profile: default
+
+profiles:
+  default:
+    horizontal: 0.40
+    vertical: 0.36
+    friction: 2.0
+    extra-horizontal: 0.48
+    extra-vertical: 0.085
+    vertical-limit: 0.40
+    air-horizontal-multiplier: 1.0
+  combo:
+    horizontal: 0.30
+    vertical: 0.25
+    friction: 2.5
+    extra-horizontal: 0.20
+    extra-vertical: 0.03
+    vertical-limit: 0.30
+    air-horizontal-multiplier: 0.9
+  sumo:
+    horizontal: 0.42
+    vertical: 0.34
+    friction: 2.0
+    extra-horizontal: 0.55
+    extra-vertical: 0.10
+    vertical-limit: 0.40
+    air-horizontal-multiplier: 1.0
+  boxing:
+    horizontal: 0.38
+    vertical: 0.36
+    friction: 2.0
+    extra-horizontal: 0.45
+    extra-vertical: 0.08
+    vertical-limit: 0.40
+    air-horizontal-multiplier: 1.0
