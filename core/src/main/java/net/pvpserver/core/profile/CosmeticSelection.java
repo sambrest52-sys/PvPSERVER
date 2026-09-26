@@ -8,6 +8,8 @@ public final class CosmeticSelection {
     private String killEffect = "none";
     private String deathAnimation = "none";
     private String joinMessage = "none";
+    private String trail = "none";
+    private String joinEffect = "none";
 
     /** @return kill effect id */
     public String killEffect() {
@@ -37,5 +39,25 @@ public final class CosmeticSelection {
     /** @param id join message id */
     public void joinMessage(String id) {
         this.joinMessage = id == null ? "none" : id;
+    }
+
+    /** @return selected lobby trail id or "none" */
+    public String trail() {
+        return trail;
+    }
+
+    /** @param id lobby trail id or null */
+    public void trail(String id) {
+        this.trail = id == null ? "none" : id;
+    }
+
+    /** @return selected join effect id or "none" */
+    public String joinEffect() {
+        return joinEffect;
+    }
+
+    /** @param id join effect id or null */
+    public void joinEffect(String id) {
+        this.joinEffect = id == null ? "none" : id;
     }
 }

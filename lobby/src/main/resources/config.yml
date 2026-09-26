@@ -1,11 +1,39 @@
-# PvPLobby configuration.
+# PvPLobby configuration. Reload with /pvpadmin reload or /lobby reload.
+#
+# Files:
+#   config.yml   this file: the lobby world, features, texts that are not messages (tips, zone names)
+#   layout.yml   where things are (spawn, NPCs, holograms, portals, launch pads, parkour, eggs, zones, particles,
+#                leaderboard wall). Written when the lobby is generated or imported; edit it or use /lobby set.
+#   npcs.yml     what the NPCs look like, their hologram lines and what clicking them does
+#   messages.yml chat, title and action bar texts
+# Sounds are Minecraft sound ids (https://minecraft.wiki/w/Sounds.json), particles are Bukkit Particle names.
 
-# Lobby spawn (world;x;y;z;yaw;pitch). Set in-game with /setspawn. Empty = main world spawn.
+world:
+  # World that holds the lobby. It is created as an empty void world when it does not exist.
+  name: pvp_lobby
+  # generated: build the procedural hub the first time the world is created (or on /lobby regenerate).
+  # custom:    use the world exactly as it is (your own build, e.g. the main world); nothing is pasted.
+  # /lobby import <file> switches any mode to the imported map until /lobby regenerate.
+  mode: generated
+  # Seed of the generated hub (the same seed always builds the same lobby).
+  seed: 1337
+  # Height of the lobby floor. Generated and imported lobbies are pasted around it.
+  floor-y: 64
+  # Fixed time of day for the lobby world (6000 = noon). Players can still pick their own time in /settings.
+  time: 6000
+  # Show a world border around the lobby (size from layout.yml border).
+  border: true
+  # Apply the practice game rules to the lobby world (no mobs, weather, daylight cycle, fire spread...).
+  tune-world: true
+
+# Legacy spawn (world;x;y;z;yaw;pitch) from 1.1. Only used by "custom" worlds whose layout.yml has no spawn.
 spawn: ""
-# Apply practice game rules (no mobs, weather, daylight cycle...) to the lobby world.
-tune-world: true
-# Players below this Y are teleported back to spawn.
+# Players below this height are sent back to spawn when layout.yml has no void-y.
 void-y: 0
+
+void:
+  # Sound played when a player is rescued from the void.
+  sound: entity.enderman.teleport
 
 double-jump:
   enabled: true
@@ -14,3 +42,159 @@ double-jump:
   forward: 1.2
   up: 0.9
   cooldown-ticks: 20
+
+launch-pads:
+  enabled: true
+  sound: entity.firework_rocket.launch
+  particle: CLOUD
+  # Ticks before the same player can use a pad again.
+  cooldown-ticks: 15
+
+portals:
+  enabled: true
+  sound: block.portal.trigger
+  # Ticks before the same player can trigger a portal again (they are also pushed back out of it).
+  cooldown-ticks: 40
+  push-back: 0.7
+  # Coloured particle curtain inside portal frames.
+  particles: true
+
+npcs:
+  enabled: true
+  # NPC heads follow the nearest player.
+  look-at-players: true
+  look-range: 10
+  # How often hologram counts (queued, fighting...) are refreshed.
+  update-interval-ticks: 40
+  click-cooldown-ms: 400
+
+parkour:
+  enabled: true
+  # Entries on the best time hologram and in /lobby parkour top.
+  leaderboard-size: 10
+  # A run that takes longer than this is cancelled.
+  max-minutes: 30
+  start-sound: block.note_block.pling
+  checkpoint-sound: entity.experience_orb.pickup
+  finish-sound: ui.toast.challenge_complete
+  fail-sound: entity.villager.no
+  # Tell everyone when someone sets a new server record.
+  broadcast-records: true
+  # Console commands after a finish ({player}, {time}, {millis}); e.g. "eco give {player} 50".
+  rewards:
+    first-finish: []
+    personal-best: []
+
+eggs:
+  enabled: true
+  sound: entity.player.levelup
+  # Console commands when an egg is found ({player}, {egg}, {found}, {total}).
+  reward-commands: []
+  # Finding every egg: console commands, and permissions given while online (lobby-only cosmetic unlocks).
+  complete:
+    commands: []
+    permissions:
+      - pvp.cosmetic.trail.emerald
+      - pvp.cosmetic.joineffect.totem
+
+leaderboard-wall:
+  enabled: true
+  # Kits on the wall in order ("global" = all kits combined). Empty = global plus every ranked kit.
+  kits: []
+  # Statistics the panels cycle through: ELO, WINS, RANKED_WINS, BEST_WIN_STREAK, FFA_KILLS, FFA_ELO, FFA_BEST_STREAK
+  stats: [ELO, WINS, BEST_WIN_STREAK]
+  rotate-seconds: 10
+  entries: 10
+  # Panel background as #AARRGGBB.
+  background: "#B0141420"
+  # Floating kit icon above each panel.
+  icons: true
+
+ambient:
+  enabled: true
+  # Emitters are spread across this many ticks, so a few fire each tick instead of all at once.
+  interval-ticks: 6
+  # Only players this close see ambient particles.
+  view-distance: 32
+  # Emitter types used in layout.yml. offset = spread "x y z"; speed = particle speed/extra.
+  emitters:
+    fountain: {particle: SPLASH, count: 10, offset: "0.8 0.3 0.8", speed: 0.1}
+    mist: {particle: CLOUD, count: 1, offset: "1 0.2 1", speed: 0.01}
+    leaves: {particle: CHERRY_LEAVES, count: 2, offset: "2.5 0.8 2.5", speed: 0}
+    spores: {particle: FALLING_SPORE_BLOSSOM, count: 1, offset: "2 0.5 2", speed: 0}
+    sparkle: {particle: END_ROD, count: 1, offset: "0.4 0.6 0.4", speed: 0.01}
+    enchant: {particle: ENCHANT, count: 8, offset: "0.6 0.8 0.6", speed: 0.6}
+    smoke: {particle: CAMPFIRE_COSY_SMOKE, count: 1, offset: "0.1 0.1 0.1", speed: 0.02}
+    flame: {particle: SMALL_FLAME, count: 1, offset: "0.05 0.05 0.05", speed: 0}
+    soul: {particle: SOUL_FIRE_FLAME, count: 1, offset: "0.1 0.2 0.1", speed: 0.01}
+    notes: {particle: NOTE, count: 1, offset: "0.8 0.4 0.8", speed: 1}
+    glow: {particle: GLOW, count: 2, offset: "0.8 0.8 0.8", speed: 0}
+    ash: {particle: WHITE_ASH, count: 4, offset: "3 1 3", speed: 0}
+    drip: {particle: DRIPPING_WATER, count: 1, offset: "0.3 0 0.3", speed: 0}
+
+# Zones announced in the action bar when entered (areas are in layout.yml zones).
+zones:
+  enabled: true
+  sound: block.note_block.hat
+  names:
+    plaza: "<primary><bold>Spawn Plaza"
+    ranked: "<gold><bold>Ranked Hall"
+    unranked: "<aqua><bold>Unranked Hall"
+    ffa: "<red><bold>FFA Arena Gate"
+    party: "<light_purple><bold>Party Lounge"
+    kit-editor: "<yellow><bold>Kit Workshop"
+    leaderboards: "<gold><bold>Hall of Fame"
+    cosmetics: "<light_purple><bold>Cosmetics Shop"
+    info: "<green><bold>Info Pavilion"
+    parkour: "<green><bold>Sky Parkour"
+
+bossbar:
+  enabled: true
+  color: YELLOW
+  # PROGRESS, NOTCHED_6, NOTCHED_10, NOTCHED_12, NOTCHED_20
+  overlay: PROGRESS
+  # Seconds each tip stays; the bar drains while it is shown.
+  seconds-per-tip: 12
+  tips:
+    - "<primary><bold>TIP</bold> <gray>Walk into a portal or click an NPC to <white>queue instantly"
+    - "<primary><bold>TIP</bold> <gray>Edit your hotbar per kit at the <yellow>Kit Workshop"
+    - "<primary><bold>TIP</bold> <gray>Beat the <green>Sky Parkour</green> for a spot on the board"
+    - "<primary><bold>TIP</bold> <gray>Some eggs are hidden around the lobby... <white>find them all!"
+    - "<primary><bold>TIP</bold> <gray>Double jump by pressing <white>jump twice"
+    - "<primary><bold>TIP</bold> <gray>Invite friends with <white>/party invite <player>"
+    - "<primary><bold>TIP</bold> <gray>Unlock trails and join effects in the <light_purple>Cosmetics Shop"
+
+announcements:
+  enabled: true
+  interval-seconds: 300
+  # Only players in the lobby receive announcements.
+  lobby-only: false
+  messages:
+    - "<prefix><gray>Join our Discord: <primary><click:open_url:'https://discord.gg/yourserver'>discord.gg/yourserver</click>"
+    - "<prefix><gray>Support the server at <primary><click:open_url:'https://store.yourserver.net'>store.yourserver.net</click>"
+    - "<prefix><gray>Ranked seasons reset every month. Check <white>/leaderboard</white> to see where you stand."
+
+welcome:
+  title:
+    enabled: true
+    title: "<primary><bold>PRACTICE"
+    subtitle: "<gray>Welcome, <white><player></white>!"
+    fade-in: 10
+    stay: 50
+    fade-out: 15
+  sound: entity.player.levelup
+  sound-volume: 0.6
+  sound-pitch: 1.4
+
+cosmetics:
+  trails:
+    enabled: true
+    interval-ticks: 3
+  join-effects:
+    enabled: true
+
+performance:
+  # Upper bound on NPC, hologram and wall entities the lobby spawns. Extra definitions are skipped with a warning.
+  max-entities: 120
+  # Hologram text changes applied per tick (the rest wait for the next tick).
+  hologram-updates-per-tick: 8

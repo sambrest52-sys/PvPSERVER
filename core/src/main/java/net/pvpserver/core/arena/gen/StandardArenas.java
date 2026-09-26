@@ -581,40 +581,15 @@ final class StandardArenas {
 
     // ------------------------------------------------------------------ helpers
 
-    /** Ring of stairs between two radii; {@code up} = the high side faces the centre (steps up inwards). */
     static void stairRing(Canvas c, double cx, double cz, double rInner, double rOuter, int y, String stairs, boolean up) {
-        for (int x = (int) Math.floor(cx - rOuter - 1); x <= (int) Math.ceil(cx + rOuter + 1); x++) {
-            for (int z = (int) Math.floor(cz - rOuter - 1); z <= (int) Math.ceil(cz + rOuter + 1); z++) {
-                double d = dist(x, z, cx, cz);
-                if (d > rInner && d <= rOuter) {
-                    String facing = up ? Canvas.facingToward(x, z, cx, cz) : Canvas.facingAway(x, z, cx, cz);
-                    c.set(x, y, z, stairs + "[facing=" + facing + "]");
-                }
-            }
-        }
+        c.stairRing(cx, cz, rInner, rOuter, y, stairs, up);
     }
 
-    /** Whether (x, z) is at least {@code min} blocks from every point. */
     static boolean farFrom(int x, int z, int[][] points, double min) {
-        for (int[] p : points) {
-            if (dist(x, z, p[0] + 0.5, p[1] + 0.5) < min) {
-                return false;
-            }
-        }
-        return true;
+        return Canvas.farFrom(x, z, points, min);
     }
 
-    /** Fills air above the outer edge columns with barrier so nobody can climb or pearl out. */
     static void fillBarrierAbove(Canvas c, int fromY) {
-        for (int y = fromY; y < c.sy(); y++) {
-            for (int i = 0; i < c.sx(); i++) {
-                c.setIfAir(i, y, 0, "barrier");
-                c.setIfAir(i, y, c.sz() - 1, "barrier");
-            }
-            for (int i = 0; i < c.sz(); i++) {
-                c.setIfAir(0, y, i, "barrier");
-                c.setIfAir(c.sx() - 1, y, i, "barrier");
-            }
-        }
+        c.fillBarrierAbove(fromY);
     }
 }

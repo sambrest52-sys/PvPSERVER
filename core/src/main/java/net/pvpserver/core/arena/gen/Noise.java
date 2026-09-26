@@ -4,11 +4,11 @@ package net.pvpserver.core.arena.gen;
  * Seeded 2D value noise with smooth interpolation and fractal octaves. Deterministic: the same seed always builds
  * the same terrain, so generated arenas are reproducible.
  */
-final class Noise {
+public final class Noise {
 
     private final long seed;
 
-    Noise(long seed) {
+    public Noise(long seed) {
         this.seed = seed;
     }
 
@@ -31,7 +31,7 @@ final class Noise {
      * @param z z
      * @return noise in [0, 1)
      */
-    double value(double x, double z) {
+    public double value(double x, double z) {
         int x0 = (int) Math.floor(x);
         int z0 = (int) Math.floor(z);
         double fx = smooth(x - x0);
@@ -54,7 +54,7 @@ final class Noise {
      * @param octaves number of octaves
      * @return noise in [0, 1)
      */
-    double fractal(double x, double z, double scale, int octaves) {
+    public double fractal(double x, double z, double scale, int octaves) {
         double sum = 0;
         double amplitude = 1;
         double total = 0;

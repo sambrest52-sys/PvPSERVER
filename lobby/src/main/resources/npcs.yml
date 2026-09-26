@@ -1,0 +1,134 @@
+# Lobby NPCs: player-shaped Mannequins (no Citizens or other NPC plugin needed) with a live hologram above them.
+# Where they stand is in layout.yml (npcs.<id>); "/lobby set npc <id>" moves one to your position.
+# An NPC without a position in layout.yml is not spawned.
+#
+# action - what clicking (left or right) does:
+#   queue-ranked, queue-unranked, ffa (menu), ffa:<arena> (join directly), kit-editor, stats, leaderboards,
+#   cosmetics, settings, spectate, party-create, party-fight, party-info, parkour (teleport to the start), spawn,
+#   warp:<layout point> (npcs.<id> or holograms.<id>), message:<messages.yml key>,
+#   command:<command> (run as the player), console:<command> (run as console, <player> = their name)
+# hologram - lines above the head (MiniMessage). Live placeholders, refreshed every npcs.update-interval-ticks:
+#   <online> <lobby> <queued> <fighting> <ffa> <spectating> <ranked_queued> <ranked_fighting>
+#   <unranked_queued> <unranked_fighting> <parkour_runners>
+# skin - "" (default Steve/Alex), "name:<player>" (looked up by the server) or "texture:<value>" /
+#   "texture:<value>;<signature>" (from a skin site such as mineskin.org)
+# equipment - helmet, chestplate, leggings, boots, main-hand, off-hand: a material, LEATHER_* pieces may add
+#   a colour: "LEATHER_CHESTPLATE #8E44AD"
+# glowing - outline glow
+config-version: 1
+
+npcs:
+  ranked:
+    action: queue-ranked
+    hologram:
+      - "<gold><bold>RANKED"
+      - "<gray>Climb the ladder, earn ELO"
+      - "<white><ranked_queued></white> <gray>queued <dark_gray>|</dark_gray> <white><ranked_fighting></white> <gray>fighting"
+      - "<yellow><bold>CLICK TO PLAY"
+    skin: ""
+    glowing: false
+    equipment:
+      helmet: DIAMOND_HELMET
+      chestplate: DIAMOND_CHESTPLATE
+      leggings: DIAMOND_LEGGINGS
+      boots: DIAMOND_BOOTS
+      main-hand: DIAMOND_SWORD
+  unranked:
+    action: queue-unranked
+    hologram:
+      - "<aqua><bold>UNRANKED"
+      - "<gray>Casual fights, no pressure"
+      - "<white><unranked_queued></white> <gray>queued <dark_gray>|</dark_gray> <white><unranked_fighting></white> <gray>fighting"
+      - "<yellow><bold>CLICK TO PLAY"
+    skin: ""
+    equipment:
+      helmet: IRON_HELMET
+      chestplate: IRON_CHESTPLATE
+      leggings: IRON_LEGGINGS
+      boots: IRON_BOOTS
+      main-hand: IRON_SWORD
+  ffa:
+    action: ffa
+    hologram:
+      - "<red><bold>FREE FOR ALL"
+      - "<gray>Jump in, fight everyone"
+      - "<white><ffa></white> <gray>players fighting"
+      - "<yellow><bold>CLICK TO JOIN"
+    skin: ""
+    equipment:
+      helmet: NETHERITE_HELMET
+      chestplate: NETHERITE_CHESTPLATE
+      leggings: NETHERITE_LEGGINGS
+      boots: NETHERITE_BOOTS
+      main-hand: NETHERITE_AXE
+  kit-editor:
+    action: kit-editor
+    hologram:
+      - "<yellow><bold>KIT EDITOR"
+      - "<gray>Arrange your hotbar per kit"
+      - "<yellow><bold>CLICK TO EDIT"
+    skin: ""
+    equipment:
+      chestplate: "LEATHER_CHESTPLATE #C9A227"
+      leggings: CHAINMAIL_LEGGINGS
+      boots: "LEATHER_BOOTS #5B3A1E"
+      main-hand: WRITABLE_BOOK
+      off-hand: ANVIL
+  stats:
+    action: stats
+    hologram:
+      - "<green><bold>YOUR STATS"
+      - "<gray>ELO, wins and streaks per kit"
+      - "<yellow><bold>CLICK TO VIEW"
+    skin: ""
+    equipment:
+      helmet: GOLDEN_HELMET
+      chestplate: "LEATHER_CHESTPLATE #2E8B57"
+      main-hand: PAPER
+  leaderboards:
+    action: leaderboards
+    hologram:
+      - "<gold><bold>LEADERBOARDS"
+      - "<gray>The best players on the server"
+      - "<yellow><bold>CLICK TO VIEW"
+    skin: ""
+    equipment:
+      helmet: GOLDEN_HELMET
+      chestplate: GOLDEN_CHESTPLATE
+      main-hand: GOLDEN_SWORD
+  cosmetics:
+    action: cosmetics
+    hologram:
+      - "<light_purple><bold>COSMETICS"
+      - "<gray>Trails, join effects, kill effects"
+      - "<yellow><bold>CLICK TO BROWSE"
+    skin: ""
+    glowing: true
+    equipment:
+      helmet: "LEATHER_HELMET #8E44AD"
+      chestplate: "LEATHER_CHESTPLATE #8E44AD"
+      leggings: "LEATHER_LEGGINGS #5B2C6F"
+      boots: "LEATHER_BOOTS #5B2C6F"
+      main-hand: NETHER_STAR
+  party:
+    action: party-create
+    hologram:
+      - "<light_purple><bold>PARTIES"
+      - "<gray>Team up and fight together"
+      - "<yellow><bold>CLICK TO CREATE"
+    skin: ""
+    equipment:
+      chestplate: "LEATHER_CHESTPLATE #3498DB"
+      leggings: "LEATHER_LEGGINGS #1F618D"
+      main-hand: NAME_TAG
+      off-hand: CAKE
+  info:
+    action: message:lobby.info
+    hologram:
+      - "<green><bold>SERVER INFO"
+      - "<gray>Rules, Discord and store"
+      - "<yellow><bold>CLICK TO READ"
+    skin: ""
+    equipment:
+      chestplate: "LEATHER_CHESTPLATE #27AE60"
+      main-hand: BOOK

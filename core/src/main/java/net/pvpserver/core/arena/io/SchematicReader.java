@@ -41,14 +41,24 @@ public final class SchematicReader {
     }
 
     /**
+     * A {@code [tag]} written on a sign, e.g. {@code [npc ranked]} for lobby imports.
+     *
+     * @param text tag text inside the brackets, lower case
+     * @param position sign position
+     */
+    public record Tag(String text, Position position) {
+    }
+
+    /**
      * Read result.
      *
      * @param blocks template contents
-     * @param markers marker positions found on signs
+     * @param markers arena marker positions found on signs (those signs are removed from the blocks)
      * @param format human readable format name
      * @param legacy whether palette entries still need legacy resolution
+     * @param tags every bracket tag found on any sign (signs other than arena markers stay in the blocks)
      */
-    public record Result(TemplateBuilder blocks, Map<Marker, Position> markers, String format, boolean legacy) {
+    public record Result(TemplateBuilder blocks, Map<Marker, Position> markers, String format, boolean legacy, List<Tag> tags) {
     }
 
     private static final Pattern TAG = Pattern.compile("\\[\\s*([a-z0-9][a-z0-9 ]*?)\\s*]");
@@ -107,8 +117,9 @@ public final class SchematicReader {
         if (entities.isEmpty()) {
             entities = Nbt.list(schematic, "TileEntities");
         }
-        Map<Marker, Position> markers = markers(builder, entities, false);
-        return new Result(builder, markers, "Sponge schematic v" + version, false);
+        List<Tag> tags = new ArrayList<>();
+        Map<Marker, Position> markers = markers(builder, entities, tags);
+        return new Result(builder, markers, "Sponge schematic v" + version, false, tags);
     }
 
     private static Result readSponge3(Map<String, Object> schematic) throws IOException {
@@ -119,8 +130,9 @@ public final class SchematicReader {
             throw new IOException("Sponge v3 schematic without Blocks.Palette/Data");
         }
         TemplateBuilder builder = fill(size, palette, data);
-        Map<Marker, Position> markers = markers(builder, Nbt.list(blocks, "BlockEntities"), false);
-        return new Result(builder, markers, "Sponge schematic v3", false);
+        List<Tag> tags = new ArrayList<>();
+        Map<Marker, Position> markers = markers(builder, Nbt.list(blocks, "BlockEntities"), tags);
+        return new Result(builder, markers, "Sponge schematic v3", false, tags);
     }
 
     private static TemplateBuilder fill(int[] size, Map<String, Object> palette, byte[] data) throws IOException {
@@ -191,12 +203,13 @@ public final class SchematicReader {
             int y = i / (size[0] * size[2]);
             builder.set(x, y, z, "legacy:" + id + ":" + (data[i] & 0x0F));
         }
-        Map<Marker, Position> markers = markers(builder, Nbt.list(schematic, "TileEntities"), true);
-        return new Result(builder, markers, "legacy MCEdit schematic", true);
+        List<Tag> tags = new ArrayList<>();
+        Map<Marker, Position> markers = markers(builder, Nbt.list(schematic, "TileEntities"), tags);
+        return new Result(builder, markers, "legacy MCEdit schematic", true, tags);
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<Marker, Position> markers(TemplateBuilder builder, List<Object> entities, boolean legacy) {
+    private static Map<Marker, Position> markers(TemplateBuilder builder, List<Object> entities, List<Tag> tags) {
         Map<Marker, Position> markers = new EnumMap<>(Marker.class);
         for (Object raw : entities) {
             if (!(raw instanceof Map<?, ?> map)) {
@@ -215,7 +228,14 @@ public final class SchematicReader {
             }
             List<String> texts = new ArrayList<>();
             collectStrings(entity, texts);
-            Marker marker = marker(String.join(" ", texts).toLowerCase(Locale.ROOT));
+            String joined = String.join(" ", texts).toLowerCase(Locale.ROOT);
+            if (builder.inside(pos[0], pos[1], pos[2])) {
+                Matcher matcher = TAG.matcher(joined);
+                while (matcher.find()) {
+                    tags.add(new Tag(matcher.group(1).trim(), new Position(pos[0], pos[1], pos[2])));
+                }
+            }
+            Marker marker = marker(joined);
             if (marker != null && builder.inside(pos[0], pos[1], pos[2])) {
                 markers.put(marker, new Position(pos[0], pos[1], pos[2]));
                 builder.set(pos[0], pos[1], pos[2], "minecraft:air");

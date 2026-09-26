@@ -189,6 +189,8 @@ public final class SqlProfileRepository implements ProfileRepository {
         root.addProperty("kill-effect", cosmetics.killEffect());
         root.addProperty("death-animation", cosmetics.deathAnimation());
         root.addProperty("join-message", cosmetics.joinMessage());
+        root.addProperty("trail", cosmetics.trail());
+        root.addProperty("join-effect", cosmetics.joinEffect());
         return GSON.toJson(root);
     }
 
@@ -202,6 +204,8 @@ public final class SqlProfileRepository implements ProfileRepository {
             if (root.has("kill-effect")) selection.killEffect(root.get("kill-effect").getAsString());
             if (root.has("death-animation")) selection.deathAnimation(root.get("death-animation").getAsString());
             if (root.has("join-message")) selection.joinMessage(root.get("join-message").getAsString());
+            if (root.has("trail")) selection.trail(root.get("trail").getAsString());
+            if (root.has("join-effect")) selection.joinEffect(root.get("join-effect").getAsString());
         } catch (RuntimeException ignored) {
             // defaults
         }

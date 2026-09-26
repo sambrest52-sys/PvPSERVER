@@ -70,7 +70,7 @@ class SchematicReaderTest {
         schematic.put("PaletteMax", 4);
         schematic.put("Palette", palette);
         schematic.put("BlockData", NbtWriter.varints(indices(1, 2, 3)));
-        schematic.put("BlockEntities", List.of(sign(1, 1, 2, "[A]"), sign(5, 1, 2, "[ Spawn B ]")));
+        schematic.put("BlockEntities", List.of(sign(1, 1, 2, "[A]"), sign(5, 1, 2, "[ Spawn B ]"), sign(0, 1, 0, "[NPC Ranked]")));
         SchematicReader.Result result = read(NbtWriter.write("Schematic", schematic));
 
         TemplateBuilder b = result.blocks();
@@ -81,6 +81,8 @@ class SchematicReaderTest {
         assertEquals(new SchematicReader.Position(1, 1, 2), result.markers().get(SchematicReader.Marker.SPAWN_A));
         assertEquals(new SchematicReader.Position(5, 1, 2), result.markers().get(SchematicReader.Marker.SPAWN_B));
         assertFalse(result.legacy());
+        assertEquals(3, result.tags().size(), "every bracket tag is reported, markers included");
+        assertTrue(result.tags().contains(new SchematicReader.Tag("npc ranked", new SchematicReader.Position(0, 1, 0))));
     }
 
     @Test

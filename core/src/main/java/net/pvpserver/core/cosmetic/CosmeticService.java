@@ -106,6 +106,8 @@ public final class CosmeticService implements Reloadable {
             case KILL_EFFECT -> selection.killEffect();
             case DEATH_ANIMATION -> selection.deathAnimation();
             case JOIN_MESSAGE -> selection.joinMessage();
+            case TRAIL -> selection.trail();
+            case JOIN_EFFECT -> selection.joinEffect();
         };
     }
 
@@ -132,6 +134,8 @@ public final class CosmeticService implements Reloadable {
             case KILL_EFFECT -> profile.cosmetics().killEffect(id);
             case DEATH_ANIMATION -> profile.cosmetics().deathAnimation(id);
             case JOIN_MESSAGE -> profile.cosmetics().joinMessage(id);
+            case TRAIL -> profile.cosmetics().trail(id);
+            case JOIN_EFFECT -> profile.cosmetics().joinEffect(id);
         }
         profile.markDirty();
         return true;

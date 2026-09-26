@@ -24,7 +24,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -53,7 +52,6 @@ public final class ArenaImporter {
     private final WorldService worlds;
     private final MessageService messages;
     private final File folder;
-    private Map<Integer, Material> legacyById;
 
     /**
      * @param plugin core plugin
@@ -171,7 +169,7 @@ public final class ArenaImporter {
         CompletableFuture.supplyAsync(() -> {
             try {
                 if (file.getName().toLowerCase(Locale.ROOT).endsWith(".arena")) {
-                    return new SchematicReader.Result(TemplateBuilder.from(ArenaTemplate.read(file)), Map.of(), "PvPCore template", false);
+                    return new SchematicReader.Result(TemplateBuilder.from(ArenaTemplate.read(file)), Map.of(), "PvPCore template", false, List.of());
                 }
                 return SchematicReader.read(file);
             } catch (IOException e) {
@@ -193,8 +191,7 @@ public final class ArenaImporter {
     private void open(Player player, String name, SchematicReader.Result result, boolean save) {
         TemplateBuilder blocks = result.blocks();
         if (result.legacy()) {
-            Map<String, String> cache = new HashMap<>();
-            blocks.remapPalette(entry -> cache.computeIfAbsent(entry, this::legacyBlock));
+            blocks.remapPalette(net.pvpserver.core.arena.io.LegacyBlocks.resolver());
         }
         Map<SchematicReader.Marker, SchematicReader.Position> markers = result.markers();
         RelativePosition spawnA = marker(markers.get(SchematicReader.Marker.SPAWN_A));
@@ -234,34 +231,6 @@ public final class ArenaImporter {
 
     private static RelativePosition marker(SchematicReader.Position position) {
         return position == null ? null : new RelativePosition(position.x() + 0.5, position.y(), position.z() + 0.5, 0f, 0f);
-    }
-
-    /** Converts a {@code legacy:<id>:<data>} entry with Paper's legacy tables (main thread). */
-    @SuppressWarnings("deprecation")
-    private String legacyBlock(String entry) {
-        if (!entry.startsWith("legacy:")) {
-            return entry;
-        }
-        String[] parts = entry.split(":");
-        try {
-            int id = Integer.parseInt(parts[1]);
-            int data = Integer.parseInt(parts[2]);
-            if (legacyById == null) {
-                legacyById = new HashMap<>();
-                for (Material material : Material.values()) {
-                    if (material.isLegacy()) {
-                        legacyById.putIfAbsent(material.getId(), material);
-                    }
-                }
-            }
-            Material legacy = legacyById.get(id);
-            if (legacy == null) {
-                return "minecraft:air";
-            }
-            return Bukkit.getUnsafe().fromLegacy(legacy, (byte) data).getAsString();
-        } catch (RuntimeException e) {
-            return "minecraft:air";
-        }
     }
 
     /**

@@ -44,12 +44,16 @@ public final class CosmeticsMenu extends Menu {
     @Override
     protected void build() {
         MenuConfig menus = plugin.menus();
-        set(11, new Button(menus.item("cosmetics.kill-effects", Material.DIAMOND_SWORD),
+        set(10, new Button(menus.item("cosmetics.kill-effects", Material.DIAMOND_SWORD),
                 (p, c) -> new Category(plugin, p, CosmeticType.KILL_EFFECT).open()));
-        set(13, new Button(menus.item("cosmetics.death-animations", Material.SKELETON_SKULL),
+        set(11, new Button(menus.item("cosmetics.death-animations", Material.SKELETON_SKULL),
                 (p, c) -> new Category(plugin, p, CosmeticType.DEATH_ANIMATION).open()));
-        set(15, new Button(menus.item("cosmetics.join-messages", Material.OAK_SIGN),
+        set(12, new Button(menus.item("cosmetics.join-messages", Material.OAK_SIGN),
                 (p, c) -> new Category(plugin, p, CosmeticType.JOIN_MESSAGE).open()));
+        set(14, new Button(menus.item("cosmetics.trails", Material.BLAZE_POWDER),
+                (p, c) -> new Category(plugin, p, CosmeticType.TRAIL).open()));
+        set(16, new Button(menus.item("cosmetics.join-effects", Material.FIREWORK_ROCKET),
+                (p, c) -> new Category(plugin, p, CosmeticType.JOIN_EFFECT).open()));
         fill(menus.filler());
     }
 

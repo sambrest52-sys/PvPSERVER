@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 /**
@@ -21,12 +23,14 @@ public final class LeaderboardService {
     public static final String GLOBAL = "global";
 
     private final StatsRepository repository;
-    private final KitService kits;
+    private final Supplier<List<Kit>> kits;
+    private final Consumer<Runnable> mainThread;
     private final Logger logger;
     private final Map<String, List<LeaderboardEntry>> cache = new ConcurrentHashMap<>();
     private final List<Runnable> listeners = new ArrayList<>();
     private int size = 10;
     private volatile long lastRefresh;
+    private CompletableFuture<Void> running;
 
     /**
      * @param repository stats storage
@@ -34,9 +38,27 @@ public final class LeaderboardService {
      * @param logger logger
      */
     public LeaderboardService(StatsRepository repository, KitService kits, Logger logger) {
+        this(repository, kits::all, Tasks::sync, logger);
+    }
+
+    /**
+     * @param repository stats storage
+     * @param kits supplies the current kits
+     * @param mainThread runs refresh listeners on the main thread
+     * @param logger logger
+     */
+    public LeaderboardService(StatsRepository repository, Supplier<List<Kit>> kits, Consumer<Runnable> mainThread, Logger logger) {
         this.repository = repository;
         this.kits = kits;
+        this.mainThread = mainThread;
         this.logger = logger;
+    }
+
+    /**
+     * @param size entries per board
+     */
+    public void size(int size) {
+        this.size = Math.max(1, size);
     }
 
     /**
@@ -44,18 +66,23 @@ public final class LeaderboardService {
      * @param size entries per board
      */
     public void start(int refreshSeconds, int size) {
-        this.size = Math.max(1, size);
+        size(size);
         long ticks = Math.max(30, refreshSeconds) * 20L;
         Tasks.timer(this::refresh, 100L, ticks);
     }
 
     /**
-     * Refreshes every board sequentially off the main thread.
+     * Refreshes every board sequentially off the main thread. While a refresh is running, further calls return it
+     * instead of starting another (a slow database never piles up queries). Boards keep their previous entries until
+     * their new ones arrive, and a failed query leaves them untouched.
      *
      * @return completion
      */
-    public CompletableFuture<Void> refresh() {
-        List<Kit> kitList = kits.all();
+    public synchronized CompletableFuture<Void> refresh() {
+        if (running != null && !running.isDone()) {
+            return running;
+        }
+        List<Kit> kitList = kits.get();
         CompletableFuture<Void> chain = CompletableFuture.completedFuture(null);
         for (StatField field : StatField.values()) {
             chain = chain.thenCompose(v -> load(null, field));
@@ -67,14 +94,15 @@ public final class LeaderboardService {
                 chain = chain.thenCompose(v -> load(kit.id(), field));
             }
         }
-        return chain.whenComplete((v, error) -> {
+        running = chain.whenComplete((v, error) -> {
             if (error != null) {
                 logger.warning("Leaderboard refresh failed: " + error.getMessage());
                 return;
             }
             lastRefresh = System.currentTimeMillis();
-            Tasks.sync(() -> listeners.forEach(Runnable::run));
+            mainThread.accept(() -> listeners.forEach(Runnable::run));
         });
+        return running;
     }
 
     private CompletableFuture<Void> load(String kit, StatField field) {

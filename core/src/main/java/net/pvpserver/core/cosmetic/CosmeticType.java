@@ -6,7 +6,11 @@ package net.pvpserver.core.cosmetic;
 public enum CosmeticType {
     KILL_EFFECT("kill-effects"),
     DEATH_ANIMATION("death-animations"),
-    JOIN_MESSAGE("join-messages");
+    JOIN_MESSAGE("join-messages"),
+    /** Lobby-only particle trail while walking. */
+    TRAIL("trails"),
+    /** Lobby-only effect played when the player joins. */
+    JOIN_EFFECT("join-effects");
 
     private final String section;
 
