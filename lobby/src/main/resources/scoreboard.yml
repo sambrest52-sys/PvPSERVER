@@ -1,7 +1,8 @@
 # Sidebars for lobby-side states. Lines starting with "?flag " only show when the flag applies
-# (flags: party, queued, ranked; prefix with ! to negate). Max 15 lines.
+# (flags: party, queued, ranked, parkour; prefix with ! to negate). Max 15 lines.
 # Placeholders: <online> <in_fight> <in_queue> <in_ffa> <ping> <player> <elo> <rank> <party_size> <party_max>
 #               <party_leader> <queue_kit> <queue_type> <queue_mode> <queue_time> <queue_min> <queue_max>
+#               <zone> <parkour_time> <parkour_best> <eggs_found> <eggs_total>
 
 lobby:
   title: "<primary><bold>PRACTICE"
@@ -14,6 +15,8 @@ lobby:
     - " "
     - "<gray>Global ELO: <primary><elo>"
     - "?party <gray>Party: <white><party_size>/<party_max>"
+    - "?parkour <green>Parkour: <white><parkour_time>"
+    - "?!parkour <gray>Area: <zone>"
     - "  "
     - "<primary>yourserver.net"
     - "<dark_gray><strikethrough>                          "

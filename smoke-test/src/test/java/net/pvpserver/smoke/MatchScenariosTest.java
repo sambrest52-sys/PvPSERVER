@@ -244,7 +244,7 @@ class MatchScenariosTest extends SmokeTestBase {
         assertTrue(hit(a, watcher, 5).isCancelled(), "spectators cannot be hit");
         assertTrue(run(watcher, "spectate leave"));
         ticks(2);
-        assertEquals("world", watcher.getWorld().getName());
+        assertEquals(LOBBY, watcher.getWorld().getName());
         assertEquals(Material.IRON_SWORD, watcher.getInventory().getItem(0).getType(), "lobby hotbar after spectating");
         assertTrue(a.canSee(watcher));
 
@@ -337,7 +337,7 @@ class MatchScenariosTest extends SmokeTestBase {
         }
 
         PlayerMock back = join("Leaver");
-        assertEquals("world", back.getWorld().getName(), "reconnects land in the lobby");
+        assertEquals(LOBBY, back.getWorld().getName(), "reconnects land in the lobby");
         assertEquals(Material.IRON_SWORD, back.getInventory().getItem(0).getType());
         drain(back);
         assertTrue(run(back, "leave"));

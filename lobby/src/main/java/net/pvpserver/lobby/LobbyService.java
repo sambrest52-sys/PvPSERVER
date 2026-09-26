@@ -2,83 +2,73 @@ package net.pvpserver.lobby;
 
 import net.pvpserver.core.api.PracticeApi;
 import net.pvpserver.core.api.bridge.LobbyBridge;
-import net.pvpserver.core.config.ConfigFile;
 import net.pvpserver.core.kit.KitService;
 import net.pvpserver.core.profile.PlayerProfile;
+import net.pvpserver.core.profile.Setting;
 import net.pvpserver.core.state.PlayerState;
-import net.pvpserver.core.util.LocationUtil;
-import org.bukkit.Bukkit;
+import net.pvpserver.lobby.config.LobbySettings;
+import net.pvpserver.lobby.layout.Point;
+import net.pvpserver.lobby.world.LobbyWorld;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 /**
- * Lobby spawn handling and the canonical "reset and send to lobby" routine used by every gamemode.
+ * Lobby spawn handling and the canonical "reset and send to lobby" routine used by every gamemode. The spawn comes
+ * from the lobby world's layout.yml.
  */
 public final class LobbyService implements LobbyBridge {
 
     private final PracticeApi api;
-    private final ConfigFile config;
+    private final PvPLobby plugin;
     private final LobbyHotbar hotbar;
     private final LobbyVisibility visibility;
-    private Location spawn;
+    private final LobbyWorld lobbyWorld;
 
     /**
      * @param api practice api
-     * @param config lobby config.yml
+     * @param plugin lobby plugin (settings)
      * @param hotbar hotbar layouts
      * @param visibility visibility rules
+     * @param lobbyWorld lobby world
      */
-    public LobbyService(PracticeApi api, ConfigFile config, LobbyHotbar hotbar, LobbyVisibility visibility) {
+    public LobbyService(PracticeApi api, PvPLobby plugin, LobbyHotbar hotbar, LobbyVisibility visibility, LobbyWorld lobbyWorld) {
         this.api = api;
-        this.config = config;
+        this.plugin = plugin;
         this.hotbar = hotbar;
         this.visibility = visibility;
-        reload();
-    }
-
-    /** Re-reads the spawn from config. */
-    public void reload() {
-        Location configured = LocationUtil.deserialize(config.get().getString("spawn", ""));
-        if (configured == null || configured.getWorld() == null) {
-            World world = Bukkit.getWorlds().get(0);
-            configured = world.getSpawnLocation().add(0.5, 0, 0.5);
-        }
-        spawn = configured;
-        if (config.get().getBoolean("tune-world", true)) {
-            api.worlds().tune(spawn.getWorld(), false);
-        }
+        this.lobbyWorld = lobbyWorld;
     }
 
     @Override
     public Location spawn() {
-        return spawn.clone();
+        return lobbyWorld.spawn();
     }
 
     /**
-     * Stores a new spawn.
+     * Stores a new spawn in layout.yml.
      *
-     * @param location spawn
+     * @param location spawn (must be in the lobby world)
      */
     public void setSpawn(Location location) {
-        spawn = location.clone();
-        config.get().set("spawn", LocationUtil.serialize(location));
-        config.save();
+        lobbyWorld.layouts().save(lobbyWorld.layout().withSpawn(Point.from(location)));
+        lobbyWorld.applyWorldSettings();
     }
 
     /**
      * @return lobby world
      */
     public World world() {
-        return spawn.getWorld();
+        return lobbyWorld.world();
     }
 
     @Override
     public void sendToLobby(Player player) {
+        plugin.features().parkour().cancel(player, false);
         reset(player);
         api.states().set(player, PlayerState.LOBBY);
-        player.teleport(spawn);
+        player.teleport(spawn());
         applyPreferences(player);
         hotbar.give(player);
         visibility.update(player);
@@ -114,9 +104,26 @@ public final class LobbyService implements LobbyBridge {
         player.setInvisible(false);
         player.setWalkSpeed(0.2f);
         player.setFlySpeed(0.1f);
-        boolean canFly = player.hasPermission("pvp.lobby.fly") || allowsDoubleJump(player);
-        player.setAllowFlight(canFly);
+        player.setFallDistance(0);
+        applyFlight(player);
         player.setFlying(false);
+    }
+
+    /**
+     * Allows flight for /fly users and double jumpers (not during a parkour run).
+     *
+     * @param player player
+     */
+    public void applyFlight(Player player) {
+        if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
+            return;
+        }
+        if (plugin.features() != null && plugin.features().parkour().running(player)) {
+            player.setAllowFlight(false);
+            return;
+        }
+        boolean flying = plugin.flying(player) && player.hasPermission("pvp.lobby.fly");
+        player.setAllowFlight(flying || player.hasPermission("pvp.lobby.fly") || allowsDoubleJump(player));
     }
 
     /**
@@ -136,17 +143,13 @@ public final class LobbyService implements LobbyBridge {
      * @return whether double jump applies (config + setting + permission)
      */
     public boolean allowsDoubleJump(Player player) {
-        if (!config.get().getBoolean("double-jump.enabled", true)) {
+        LobbySettings.DoubleJump settings = plugin.settings().doubleJump();
+        if (!settings.enabled()) {
             return false;
         }
         PlayerProfile profile = api.profiles().get(player);
-        String permission = config.get().getString("double-jump.permission", "");
+        String permission = settings.permission();
         boolean permitted = permission == null || permission.isEmpty() || player.hasPermission(permission);
-        return permitted && (profile == null || profile.settings().is(net.pvpserver.core.profile.Setting.DOUBLE_JUMP));
-    }
-
-    /** @return lobby config */
-    public ConfigFile config() {
-        return config;
+        return permitted && (profile == null || profile.settings().is(Setting.DOUBLE_JUMP));
     }
 }

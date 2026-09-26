@@ -16,6 +16,9 @@ import net.pvpserver.core.profile.PlayerProfile;
 import net.pvpserver.core.profile.Setting;
 import net.pvpserver.core.state.PlayerState;
 import net.pvpserver.lobby.command.LobbyCommands;
+import net.pvpserver.lobby.config.LobbySettings;
+import net.pvpserver.lobby.config.NpcDefinition;
+import net.pvpserver.lobby.feature.LobbyFeatures;
 import net.pvpserver.lobby.hologram.HologramService;
 import net.pvpserver.lobby.kiteditor.KitEditor;
 import net.pvpserver.lobby.menu.CosmeticsMenu;
@@ -23,12 +26,18 @@ import net.pvpserver.lobby.menu.LeaderboardMenu;
 import net.pvpserver.lobby.menu.MenuConfig;
 import net.pvpserver.lobby.menu.SettingsMenu;
 import net.pvpserver.lobby.menu.StatsMenu;
+import net.pvpserver.lobby.world.LayoutStore;
+import net.pvpserver.lobby.world.LobbyImporter;
+import net.pvpserver.lobby.world.LobbyWorld;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -36,17 +45,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * PvPLobby plugin: spawn hub, hotbar, menus, kit editor and leaderboard holograms.
+ * PvPLobby plugin: the lobby world (generated hub or imported map), NPCs, portals, parkour, leaderboard wall, hotbar,
+ * menus, kit editor and scoreboards.
  */
 public final class PvPLobby extends JavaPlugin implements Listener {
 
     private PracticeApi api;
     private MessageService messages;
     private ConfigFile config;
+    private ConfigFile npcFile;
+    private volatile LobbySettings settings;
+    private volatile Map<String, NpcDefinition> npcDefinitions = Map.of();
     private MenuConfig menus;
     private LobbyHotbar hotbar;
     private LobbyVisibility visibility;
+    private LobbyWorld lobbyWorld;
     private LobbyService lobby;
+    private LobbyFeatures features;
+    private LobbyImporter importer;
     private KitEditor kitEditor;
     private HologramService holograms;
     private final Set<UUID> flying = ConcurrentHashMap.newKeySet();
@@ -55,22 +71,45 @@ public final class PvPLobby extends JavaPlugin implements Listener {
     public void onEnable() {
         api = Practice.api();
         config = new ConfigFile(this, "config.yml");
+        npcFile = new ConfigFile(this, "npcs.yml", true);
+        loadSettings();
         messages = new MessageService(this, "messages.yml", api.messages());
         menus = new MenuConfig(new ConfigFile(this, "menus.yml"), messages);
         hotbar = new LobbyHotbar(api, new ConfigFile(this, "hotbar.yml"), messages);
         visibility = new LobbyVisibility(this, api);
-        lobby = new LobbyService(api, config, hotbar, visibility);
+
+        lobbyWorld = new LobbyWorld(this, api, new LayoutStore(this));
+        lobbyWorld.start(settings);
+        lobby = new LobbyService(api, this, hotbar, visibility, lobbyWorld);
+        features = new LobbyFeatures(this);
+        importer = new LobbyImporter(this, lobbyWorld);
         kitEditor = new KitEditor(this);
         holograms = new HologramService(this);
 
         api.bridges().register(LobbyBridge.class, lobby);
         api.bridges().register(KitEditorBridge.class, kitEditor);
         registerHotbarActions();
+        hotbar.override(player -> features.parkour().running(player) ? "parkour" : null);
 
         ConfigFile scoreboard = new ConfigFile(this, "scoreboard.yml");
-        LobbyScoreboard lobbyBoard = new LobbyScoreboard(api, messages, scoreboard, "lobby");
-        LobbyScoreboard queueBoard = new LobbyScoreboard(api, messages, scoreboard, "queue");
-        LobbyScoreboard editorBoard = new LobbyScoreboard(api, messages, scoreboard, "editing");
+        LobbyScoreboard.Extras extras = new LobbyScoreboard.Extras() {
+            @Override
+            public void apply(Player player, java.util.Set<String> flags, List<net.kyori.adventure.text.minimessage.tag.resolver.TagResolver> out) {
+                String zone = features.triggers().zoneOf(player);
+                out.add(MessageService.c("zone", zone == null ? messages.parse(settings.zones().names().getOrDefault("plaza", "Lobby"))
+                        : messages.parse(settings.zones().names().getOrDefault(zone, zone))));
+                out.add(MessageService.p("parkour_time", features.parkour().currentTime(player)));
+                out.add(MessageService.p("parkour_best", features.parkour().bestTime(player)));
+                out.add(MessageService.p("eggs_found", features.eggs().found(player)));
+                out.add(MessageService.p("eggs_total", lobbyWorld.layout().eggs().size()));
+                if (features.parkour().running(player)) {
+                    flags.add("parkour");
+                }
+            }
+        };
+        LobbyScoreboard lobbyBoard = new LobbyScoreboard(api, messages, scoreboard, "lobby", extras);
+        LobbyScoreboard queueBoard = new LobbyScoreboard(api, messages, scoreboard, "queue", extras);
+        LobbyScoreboard editorBoard = new LobbyScoreboard(api, messages, scoreboard, "editing", extras);
         api.sidebars().register(PlayerState.LOBBY, lobbyBoard);
         api.sidebars().register(PlayerState.QUEUE, queueBoard);
         api.sidebars().register(PlayerState.EDITING, editorBoard);
@@ -80,11 +119,9 @@ public final class PvPLobby extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
         CommandRegistrar.register(this, LobbyCommands.create(this));
         holograms.start();
+        features.start();
+        lobbyWorld.onChange(features::spawnAll);
 
-        api.reloads().register("lobby:config", () -> {
-            config.reload();
-            lobby.reload();
-        });
         api.reloads().register("lobby:messages", messages);
         api.reloads().register("lobby:menus", menus::reload);
         api.reloads().register("lobby:hotbar", hotbar::reload);
@@ -95,14 +132,20 @@ public final class PvPLobby extends JavaPlugin implements Listener {
             editorBoard.reload();
         });
         api.reloads().register("lobby:holograms", holograms::reload);
+        // Last: settings, NPCs and layout, then everything respawns with the reloaded messages.
+        api.reloads().register("lobby:config", this::reloadLobby);
 
         // Players already online (e.g. /reload) are reset into the lobby.
         getServer().getOnlinePlayers().forEach(lobby::sendToLobby);
-        getLogger().info("PvPLobby enabled (spawn: " + lobby.world().getName() + ")");
+        getLogger().info("PvPLobby enabled (lobby world: " + lobbyWorld.world().getName() + ", " + features.displays().size()
+                + " lobby entities)");
     }
 
     @Override
     public void onDisable() {
+        if (features != null) {
+            features.stop();
+        }
         if (holograms != null) {
             holograms.despawnAll();
         }
@@ -111,6 +154,34 @@ public final class PvPLobby extends JavaPlugin implements Listener {
             api.bridges().unregister(KitEditorBridge.class);
             api.reloads().unregisterPrefix("lobby:");
         }
+    }
+
+    /**
+     * Re-reads config.yml, npcs.yml and layout.yml and respawns the lobby's entities.
+     *
+     * @return warnings from the three files
+     */
+    public List<String> reloadLobby() {
+        config.reload();
+        npcFile.reload();
+        List<String> warnings = loadSettings();
+        warnings.addAll(lobbyWorld.layouts().load());
+        lobbyWorld.reload(settings);
+        features.reload();
+        return warnings;
+    }
+
+    private List<String> loadSettings() {
+        List<String> warnings = new ArrayList<>();
+        List<String> configWarnings = new ArrayList<>();
+        settings = LobbySettings.read(config.get(), configWarnings);
+        configWarnings.forEach(w -> getLogger().warning("config.yml: " + w));
+        List<String> npcWarnings = new ArrayList<>();
+        npcDefinitions = Map.copyOf(NpcDefinition.read(npcFile.get(), npcWarnings));
+        npcWarnings.forEach(w -> getLogger().warning("npcs.yml: " + w));
+        configWarnings.forEach(w -> warnings.add("config.yml: " + w));
+        npcWarnings.forEach(w -> warnings.add("npcs.yml: " + w));
+        return warnings;
     }
 
     private void registerHotbarActions() {
@@ -136,6 +207,9 @@ public final class PvPLobby extends JavaPlugin implements Listener {
                 new StatsMenu(this, p, profile).open();
             }
         });
+        action("parkour-checkpoint", p -> features.parkour().toCheckpoint(p));
+        action("parkour-restart", p -> features.parkour().restart(p));
+        action("parkour-leave", p -> features.parkour().cancel(p, true));
     }
 
     private void action(String id, Consumer<Player> handler) {
@@ -158,7 +232,7 @@ public final class PvPLobby extends JavaPlugin implements Listener {
             case LOBBY_PLAYERS -> visibility.update(player);
             case DOUBLE_JUMP -> {
                 if (api.states().is(player, PlayerState.LOBBY, PlayerState.QUEUE)) {
-                    player.setAllowFlight(player.hasPermission("pvp.lobby.fly") || lobby.allowsDoubleJump(player));
+                    lobby.applyFlight(player);
                 }
             }
             default -> {
@@ -180,6 +254,9 @@ public final class PvPLobby extends JavaPlugin implements Listener {
      */
     public boolean toggleFly(Player player) {
         boolean enabled = flying.add(player.getUniqueId()) || !flying.remove(player.getUniqueId());
+        if (enabled) {
+            features.parkour().cancel(player, true);
+        }
         player.setAllowFlight(enabled || lobby.allowsDoubleJump(player));
         player.setFlying(enabled);
         return enabled;
@@ -188,6 +265,7 @@ public final class PvPLobby extends JavaPlugin implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         flying.remove(event.getPlayer().getUniqueId());
+        features.quit(event.getPlayer());
     }
 
     /** @return practice api */
@@ -200,14 +278,44 @@ public final class PvPLobby extends JavaPlugin implements Listener {
         return messages;
     }
 
+    /** @return typed config.yml */
+    public LobbySettings settings() {
+        return settings;
+    }
+
+    /** @return NPC definitions from npcs.yml */
+    public Map<String, NpcDefinition> npcDefinitions() {
+        return npcDefinitions;
+    }
+
     /** @return menus.yml access */
     public MenuConfig menus() {
         return menus;
     }
 
+    /** @return lobby hotbar */
+    public LobbyHotbar hotbar() {
+        return hotbar;
+    }
+
     /** @return lobby service */
     public LobbyService lobby() {
         return lobby;
+    }
+
+    /** @return lobby world */
+    public LobbyWorld lobbyWorld() {
+        return lobbyWorld;
+    }
+
+    /** @return NPCs, portals, parkour and the rest */
+    public LobbyFeatures features() {
+        return features;
+    }
+
+    /** @return lobby importer */
+    public LobbyImporter importer() {
+        return importer;
     }
 
     /** @return visibility */

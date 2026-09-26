@@ -70,9 +70,9 @@ class PluginBootTest extends SmokeTestBase {
         EntityDamageByEntityEvent lethal = hit(b, a, 1000.0);
         assertTrue(lethal.isCancelled(), "lethal hit intercepted as a fake death");
         assertFalse(a.isDead(), "fake death keeps the player alive");
-        waitFor(() -> "world".equals(a.getWorld().getName()) && "world".equals(b.getWorld().getName()), 8000);
-        assertEquals("world", a.getWorld().getName(), "loser back in lobby");
-        assertEquals("world", b.getWorld().getName(), "winner back in lobby");
+        waitFor(() -> LOBBY.equals(a.getWorld().getName()) && LOBBY.equals(b.getWorld().getName()), 8000);
+        assertEquals(LOBBY, a.getWorld().getName(), "loser back in lobby");
+        assertEquals(LOBBY, b.getWorld().getName(), "winner back in lobby");
         assertEquals(Material.IRON_SWORD, b.getInventory().getItem(0).getType(), "lobby hotbar restored");
 
         // Results are persisted asynchronously: match history immediately, stats on quit/autosave.
@@ -151,7 +151,7 @@ class PluginBootTest extends SmokeTestBase {
         waitFor(() -> "pvp_arenas".equals(a.getWorld().getName()), 5000);
         // Disabling mid-match must cancel the match and return players to the lobby without errors.
         server.getPluginManager().disablePlugin(duels);
-        assertEquals("world", a.getWorld().getName());
+        assertEquals(LOBBY, a.getWorld().getName());
         server.getPluginManager().disablePlugin(ffa);
         server.getPluginManager().disablePlugin(lobby);
         server.getPluginManager().disablePlugin(core);
@@ -170,8 +170,8 @@ class PluginBootTest extends SmokeTestBase {
         waitFor(() -> false, 6000);
         // Falling off the platform (below the arena's void Y) eliminates the player.
         a.simulatePlayerMove(a.getLocation().clone().subtract(0, 20, 0));
-        waitFor(() -> "world".equals(a.getWorld().getName()) && "world".equals(b.getWorld().getName()), 8000);
-        assertEquals("world", b.getWorld().getName(), "winner returned to lobby after the end screen");
+        waitFor(() -> LOBBY.equals(a.getWorld().getName()) && LOBBY.equals(b.getWorld().getName()), 8000);
+        assertEquals(LOBBY, b.getWorld().getName(), "winner returned to lobby after the end screen");
     }
 
     @Test
@@ -189,8 +189,8 @@ class PluginBootTest extends SmokeTestBase {
         assertTrue(a.getInventory().isEmpty(), "boxing is fought with fists");
         assertTrue(a.hasPotionEffect(org.bukkit.potion.PotionEffectType.SPEED), "boxing kit applied (Speed II)");
         assertTrue(run(a, "leave"), "forfeit via /leave");
-        waitFor(() -> "world".equals(a.getWorld().getName()) && "world".equals(b.getWorld().getName()), 8000);
-        assertEquals("world", a.getWorld().getName());
-        assertEquals("world", b.getWorld().getName());
+        waitFor(() -> LOBBY.equals(a.getWorld().getName()) && LOBBY.equals(b.getWorld().getName()), 8000);
+        assertEquals(LOBBY, a.getWorld().getName());
+        assertEquals(LOBBY, b.getWorld().getName());
     }
 }

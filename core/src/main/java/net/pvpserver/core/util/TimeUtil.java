@@ -89,4 +89,22 @@ public final class TimeUtil {
         long s = total % 60;
         return h > 0 ? String.format("%d:%02d:%02d", h, m, s) : String.format("%02d:%02d", m, s);
     }
+
+    /**
+     * Formats a precise time such as a parkour run: {@code 0:07.250}, {@code 1:23.456}, {@code 1:02:03.004}.
+     *
+     * @param millis milliseconds
+     * @return formatted time
+     */
+    public static String formatMillis(long millis) {
+        long clamped = Math.max(0, millis);
+        long hours = clamped / 3_600_000;
+        long minutes = (clamped / 60_000) % 60;
+        long seconds = (clamped / 1000) % 60;
+        long rest = clamped % 1000;
+        if (hours > 0) {
+            return String.format(java.util.Locale.ROOT, "%d:%02d:%02d.%03d", hours, minutes, seconds, rest);
+        }
+        return String.format(java.util.Locale.ROOT, "%d:%02d.%03d", minutes, seconds, rest);
+    }
 }

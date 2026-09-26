@@ -44,13 +44,26 @@ class PracticeServerMock extends ServerMock {
     @Override
     public org.mockbukkit.mockbukkit.inventory.InventoryMock createInventory(org.bukkit.inventory.InventoryHolder owner, int size,
                                                                             net.kyori.adventure.text.Component title) {
-        return new HolderAwareChest(owner, size);
+        HolderAwareChest chest = new HolderAwareChest(owner, size);
+        chest.title = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(title);
+        return chest;
     }
 
     /**
-     * Chest inventory implementing Paper's {@code getHolder(boolean)} (used by the menu framework).
+     * @param inventory an inventory created by a plugin menu
+     * @return the menu title as plain text ("" for other inventories)
+     */
+    static String title(org.bukkit.inventory.Inventory inventory) {
+        return inventory instanceof HolderAwareChest chest && chest.title != null ? chest.title : "";
+    }
+
+    /**
+     * Chest inventory implementing Paper's {@code getHolder(boolean)} (used by the menu framework) and remembering its
+     * title so tests can tell menus apart.
      */
     static final class HolderAwareChest extends org.mockbukkit.mockbukkit.inventory.ChestInventoryMock {
+        private String title;
+
         HolderAwareChest(org.bukkit.inventory.InventoryHolder holder, int size) {
             super(holder, size);
         }

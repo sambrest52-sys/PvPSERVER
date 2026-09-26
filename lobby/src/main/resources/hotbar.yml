@@ -1,6 +1,7 @@
 # Lobby hotbars. Keys are slots (0-8). "action" selects what right-clicking does:
 #   queue-unranked, queue-ranked, leave-queue, ffa, spectate, party-create, party-info, party-fight,
-#   party-leave, kit-editor, stats, settings, cosmetics, leaderboards
+#   party-leave, kit-editor, stats, settings, cosmetics, leaderboards,
+#   parkour-checkpoint, parkour-restart, parkour-leave (the "parkour" layout replaces the lobby one during a run)
 # Items use the same format as menus (material, name, lore, glow, amount, model).
 
 held-slot: 0
@@ -34,3 +35,7 @@ layouts:
   party-queue:
     0: {action: leave-queue, material: RED_DYE, name: "<error>Leave Queue <gray>(Right Click)"}
     4: {action: party-info, material: PAPER, name: "<white>Party Info <gray>(Right Click)"}
+  parkour:
+    3: {action: parkour-checkpoint, material: HEAVY_WEIGHTED_PRESSURE_PLATE, name: "<green>Last Checkpoint <gray>(Right Click)"}
+    4: {action: parkour-restart, material: CLOCK, name: "<yellow>Restart <gray>(Right Click)"}
+    5: {action: parkour-leave, material: RED_BED, name: "<red>Leave Parkour <gray>(Right Click)"}

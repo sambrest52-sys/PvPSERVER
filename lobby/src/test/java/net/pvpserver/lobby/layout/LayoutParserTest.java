@@ -38,7 +38,7 @@ class LayoutParserTest {
                 List.of(new LobbyLayout.Button(new BlockPos(-40, 65, 2), "kit-editor")),
                 new Parkour(new BlockPos(50, 65, 0), List.of(new BlockPos(52, 67, 4), new BlockPos(55, 70, 9)), new BlockPos(60, 80, 12), 58),
                 List.of(new Egg("fountain", new BlockPos(1, 60, 1)), new Egg("tree", new BlockPos(-30, 72, 5))),
-                List.of(new Zone("plaza", 0.5, 0.5, 18)),
+                List.of(new Zone("plaza", 0.5, 0.5, 18), new Zone("sky", 5, 5, 6, 80)),
                 List.of(new Emitter("fountain", Point.of(0.5, 67, 0.5))),
                 new Wall(new Point(-20.5, 70, -40.5, 0, 0), 4, 3.5, 3.25));
     }
@@ -117,6 +117,8 @@ class LayoutParserTest {
         assertEquals(new BlockPos(60, 55, 7), moved.buttons().get(0).at());
         assertEquals(48, moved.parkour().fallY());
         assertEquals(100.5, moved.zones().get(0).x());
+        assertEquals(70, moved.zones().get(1).minY());
+        assertEquals(Integer.MIN_VALUE, moved.zones().get(0).minY());
         assertEquals(100, moved.border().centerX());
         assertEquals(-35.5, moved.wall().at().z());
         assertEquals(sample(), moved.translate(-100, 10, -5));

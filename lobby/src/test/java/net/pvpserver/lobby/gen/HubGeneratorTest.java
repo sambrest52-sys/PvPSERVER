@@ -89,6 +89,13 @@ class HubGeneratorTest {
     }
 
     @Test
+    void pastingStaysCheap() {
+        int solid = b.build().solidIndices().length;
+        System.out.println("Hub blocks to paste: " + solid);
+        assertTrue(solid < 400_000, "hub pastes " + solid + " blocks");
+    }
+
+    @Test
     void spawnNpcsAndHologramsAreWellPlaced() {
         assertStandable("spawn", layout.spawn());
         assertEquals(180f, layout.spawn().yaw(), "spawn looks at the fountain and the NPCs");
@@ -225,7 +232,8 @@ class HubGeneratorTest {
         for (LobbyLayout.Egg egg : layout.eggs()) {
             assertTrue(ids.add(egg.id()), "unique egg id " + egg.id());
             String block = BlockStates.id(b.get(egg.at().x(), egg.at().y(), egg.at().z()));
-            assertTrue(Set.of("dragon_egg", "sniffer_egg", "turtle_egg").contains(block), egg.id() + " is an egg block: " + block);
+            // Dragon and turtle eggs never change on their own (turtle eggs only hatch on sand; sniffer eggs would hatch).
+            assertTrue(Set.of("dragon_egg", "turtle_egg").contains(block), egg.id() + " is an egg block: " + block);
             String above = BlockStates.id(b.get(egg.at().x(), egg.at().y() + 1, egg.at().z()));
             assertTrue(above.equals("air") || above.equals("water"), egg.id() + " can be seen and clicked from above: " + above);
         }

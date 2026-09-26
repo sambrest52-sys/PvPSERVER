@@ -9,6 +9,7 @@ import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockbukkit.mockbukkit.MockBukkit;
@@ -48,6 +50,8 @@ abstract class SmokeTestBase {
     protected static final int COUNTDOWN_TICKS = 110;
     /** End screen (4 s) plus a margin, in ticks. */
     protected static final int END_TICKS = 100;
+    /** The generated lobby world. */
+    protected static final String LOBBY = "pvp_lobby";
 
     @TempDir
     Path temp;
@@ -131,6 +135,22 @@ abstract class SmokeTestBase {
         return player;
     }
 
+    /**
+     * Moves a player the way Paper does: plugins may redirect the move ({@link PlayerMoveEvent#setTo}), which
+     * MockBukkit's simulation ignores.
+     *
+     * @param player player
+     * @param to destination
+     * @return the fired event
+     */
+    protected static PlayerMoveEvent move(PlayerMock player, Location to) {
+        PlayerMoveEvent event = player.simulatePlayerMove(to);
+        if (!event.isCancelled() && !event.getTo().equals(to)) {
+            player.setLocation(event.getTo());
+        }
+        return event;
+    }
+
     protected boolean run(PlayerMock player, String command) {
         return server.dispatchCommand(player, command);
     }
@@ -146,7 +166,7 @@ abstract class SmokeTestBase {
 
     /** Waits until every player is back in the lobby world. */
     protected void awaitLobby(PlayerMock... players) throws InterruptedException {
-        await("players back in the lobby", () -> in("world", players), 8000);
+        await("players back in the lobby", () -> in(LOBBY, players), 8000);
     }
 
     /** Joins an FFA arena, retrying while FFA is still pasting its arenas after startup. */
@@ -240,6 +260,59 @@ abstract class SmokeTestBase {
         return null;
     }
 
+    // ------------------------------------------------------------------ schematics
+
+    /** Writes a gzip NBT compound like WorldEdit does (only the tag types a Sponge schematic needs). */
+    protected static byte[] nbt(String rootName, java.util.Map<String, Object> root) throws java.io.IOException {
+        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+        try (java.io.DataOutputStream out = new java.io.DataOutputStream(new java.util.zip.GZIPOutputStream(bytes))) {
+            out.writeByte(10);
+            out.writeUTF(rootName);
+            compound(out, root);
+        }
+        return bytes.toByteArray();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void compound(java.io.DataOutputStream out, java.util.Map<String, Object> map) throws java.io.IOException {
+        for (var entry : map.entrySet()) {
+            Object v = entry.getValue();
+            int type = v instanceof Short ? 2 : v instanceof Integer ? 3 : v instanceof byte[] ? 7 : v instanceof String ? 8
+                    : v instanceof java.util.List<?> ? 9 : v instanceof java.util.Map<?, ?> ? 10 : v instanceof int[] ? 11 : -1;
+            out.writeByte(type);
+            out.writeUTF(entry.getKey());
+            value(out, v);
+        }
+        out.writeByte(0);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void value(java.io.DataOutputStream out, Object v) throws java.io.IOException {
+        if (v instanceof Short sh) {
+            out.writeShort(sh);
+        } else if (v instanceof Integer i) {
+            out.writeInt(i);
+        } else if (v instanceof byte[] b) {
+            out.writeInt(b.length);
+            out.write(b);
+        } else if (v instanceof String str) {
+            out.writeUTF(str);
+        } else if (v instanceof java.util.List<?> list) {
+            out.writeByte(list.isEmpty() ? 0 : list.get(0) instanceof String ? 8 : 10);
+            out.writeInt(list.size());
+            for (Object element : list) {
+                value(out, element);
+            }
+        } else if (v instanceof java.util.Map<?, ?> m) {
+            compound(out, (java.util.Map<String, Object>) m);
+        } else if (v instanceof int[] ints) {
+            out.writeInt(ints.length);
+            for (int i : ints) {
+                out.writeInt(i);
+            }
+        }
+    }
+
     // ------------------------------------------------------------------ storage
 
     /** Opens the default SQLite database the core plugin writes to. */
@@ -253,13 +326,29 @@ abstract class SmokeTestBase {
      * A plugin reaching an unimplemented mock method must fail loudly instead, so the gap gets filled in
      * {@link PracticeServerMock} rather than silently hiding a scenario.
      */
-    static final class FailOnUnimplemented implements TestExecutionExceptionHandler {
+    static final class FailOnUnimplemented implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler {
         @Override
         public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+            throw convert(throwable);
+        }
+
+        // MockBukkit's exception is a TestAbortedException, which would silently skip every test when a plugin hits it
+        // while booting; fail loudly instead.
+        @Override
+        public void handleBeforeEachMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+            throw convert(throwable);
+        }
+
+        @Override
+        public void handleAfterEachMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+            throw convert(throwable);
+        }
+
+        private static Throwable convert(Throwable throwable) {
             if (throwable instanceof UnimplementedOperationException) {
-                throw new AssertionError("MockBukkit does not implement a method the plugins used", throwable);
+                return new AssertionError("MockBukkit does not implement a method the plugins used", throwable);
             }
-            throw throwable;
+            return throwable;
         }
     }
 }

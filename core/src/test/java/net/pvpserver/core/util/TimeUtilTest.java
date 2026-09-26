@@ -31,4 +31,12 @@ class TimeUtilTest {
         assertEquals("01:05", TimeUtil.formatClock(65_000));
         assertEquals("1:01:05", TimeUtil.formatClock(3_665_000));
     }
+
+    @org.junit.jupiter.api.Test
+    void formatsPreciseTimes() {
+        org.junit.jupiter.api.Assertions.assertEquals("0:07.250", TimeUtil.formatMillis(7250));
+        org.junit.jupiter.api.Assertions.assertEquals("1:23.456", TimeUtil.formatMillis(83_456));
+        org.junit.jupiter.api.Assertions.assertEquals("1:02:03.004", TimeUtil.formatMillis(3_723_004));
+        org.junit.jupiter.api.Assertions.assertEquals("0:00.000", TimeUtil.formatMillis(-5));
+    }
 }

@@ -72,7 +72,9 @@ public final class HotbarService implements Listener {
 
     @EventHandler(priority = EventPriority.LOW)
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND || event.getAction() == Action.PHYSICAL) {
+        // A block that handled the click itself (lobby buttons, eggs) denies the item use.
+        if (event.getHand() != EquipmentSlot.HAND || event.getAction() == Action.PHYSICAL
+                || event.useItemInHand() == org.bukkit.event.Event.Result.DENY) {
             return;
         }
         String action = actionOf(event.getItem());
@@ -81,11 +83,11 @@ public final class HotbarService implements Listener {
         }
         event.setCancelled(true);
         if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            run(event.getPlayer(), action);
+            use(event.getPlayer(), action);
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onInteractEntity(PlayerInteractEntityEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) {
             return;
@@ -93,11 +95,34 @@ public final class HotbarService implements Listener {
         String action = actionOf(event.getPlayer().getInventory().getItemInMainHand());
         if (action != null) {
             event.setCancelled(true);
-            run(event.getPlayer(), action);
+            use(event.getPlayer(), action);
         }
     }
 
-    private void run(Player player, String action) {
+    /**
+     * Runs a registered action (throttled like item clicks), e.g. for NPCs and portals that share the hotbar's actions.
+     *
+     * @param player player
+     * @param action action id
+     * @return whether the action exists
+     */
+    public boolean run(Player player, String action) {
+        if (!actions.containsKey(action)) {
+            return false;
+        }
+        use(player, action);
+        return true;
+    }
+
+    /**
+     * @param action action id
+     * @return whether an action with that id is registered
+     */
+    public boolean has(String action) {
+        return actions.containsKey(action);
+    }
+
+    private void use(Player player, String action) {
         long now = System.currentTimeMillis();
         Long last = lastUse.get(player.getUniqueId());
         if (last != null && now - last < 250) {

@@ -95,18 +95,30 @@ public record LobbyLayout(Point spawn, int voidY, Border border, Map<String, Poi
      * @param x centre x
      * @param z centre z
      * @param radius radius
+     * @param minY lowest height that counts as inside ({@link Integer#MIN_VALUE} = any height)
      */
-    public record Zone(String id, double x, double z, double radius) {
+    public record Zone(String id, double x, double z, double radius, int minY) {
+
+        /**
+         * @param id id
+         * @param x centre x
+         * @param z centre z
+         * @param radius radius
+         */
+        public Zone(String id, double x, double z, double radius) {
+            this(id, x, z, radius, Integer.MIN_VALUE);
+        }
 
         /**
          * @param px x
+         * @param py y
          * @param pz z
-         * @return whether the column is inside
+         * @return whether the position is inside
          */
-        public boolean contains(double px, double pz) {
+        public boolean contains(double px, double py, double pz) {
             double dx = px - x;
             double dz = pz - z;
-            return dx * dx + dz * dz <= radius * radius;
+            return py >= minY && dx * dx + dz * dz <= radius * radius;
         }
     }
 
@@ -206,7 +218,7 @@ public record LobbyLayout(Point spawn, int voidY, Border border, Map<String, Poi
                 roundedNpcs, roundedHolograms, portals,
                 pads.stream().map(pad -> new LaunchPad(pad.at(), round(pad.vx()), round(pad.vy()), round(pad.vz()))).toList(),
                 buttons, parkour, eggs,
-                zones.stream().map(zone -> new Zone(zone.id(), round(zone.x()), round(zone.z()), round(zone.radius()))).toList(),
+                zones.stream().map(zone -> new Zone(zone.id(), round(zone.x()), round(zone.z()), round(zone.radius()), zone.minY())).toList(),
                 emitters.stream().map(emitter -> new Emitter(emitter.type(), p.apply(emitter.at()))).toList(),
                 wall == null ? null : new Wall(p.apply(wall.at()), wall.columns(), round(wall.spacingX()), round(wall.spacingY())));
     }
@@ -240,7 +252,8 @@ public record LobbyLayout(Point spawn, int voidY, Border border, Map<String, Poi
                 parkour == null ? null : new Parkour(b.apply(parkour.start()), parkour.checkpoints().stream().map(b).toList(),
                         b.apply(parkour.finish()), parkour.fallY() + dy),
                 eggs.stream().map(egg -> new Egg(egg.id(), b.apply(egg.at()))).toList(),
-                zones.stream().map(zone -> new Zone(zone.id(), zone.x() + dx, zone.z() + dz, zone.radius())).toList(),
+                zones.stream().map(zone -> new Zone(zone.id(), zone.x() + dx, zone.z() + dz, zone.radius(),
+                        zone.minY() == Integer.MIN_VALUE ? Integer.MIN_VALUE : zone.minY() + dy)).toList(),
                 emitters.stream().map(emitter -> new Emitter(emitter.type(), p.apply(emitter.at()))).toList(),
                 wall == null ? null : new Wall(p.apply(wall.at()), wall.columns(), wall.spacingX(), wall.spacingY()));
     }

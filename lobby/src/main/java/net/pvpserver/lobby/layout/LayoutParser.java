@@ -232,7 +232,8 @@ public final class LayoutParser {
                 if (radius <= 0) {
                     throw new IllegalArgumentException("radius must be positive");
                 }
-                zones.add(new Zone(id.toLowerCase(Locale.ROOT), center[0], center[1], radius));
+                zones.add(new Zone(id.toLowerCase(Locale.ROOT), center[0], center[1], radius,
+                        zone.contains("min-y") ? zone.getInt("min-y") : Integer.MIN_VALUE));
             } catch (IllegalArgumentException e) {
                 warnings.add("zones." + id + ": " + e.getMessage());
             }
@@ -329,6 +330,9 @@ public final class LayoutParser {
         for (Zone zone : layout.zones()) {
             root.set("zones." + zone.id() + ".center", LayoutNumbers.format(zone.x()) + " " + LayoutNumbers.format(zone.z()));
             root.set("zones." + zone.id() + ".radius", zone.radius());
+            if (zone.minY() != Integer.MIN_VALUE) {
+                root.set("zones." + zone.id() + ".min-y", zone.minY());
+            }
         }
         List<Map<String, Object>> emitters = new ArrayList<>();
         for (Emitter emitter : layout.emitters()) {

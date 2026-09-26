@@ -27,7 +27,18 @@ public final class LobbyScoreboard implements SidebarProvider {
     private final MessageService messages;
     private final ConfigFile file;
     private final String section;
+    private final Extras extras;
     private SidebarTemplate template;
+
+    /** Extra placeholders and flags provided by lobby features (zone, parkour, eggs). */
+    public interface Extras {
+        /**
+         * @param player player
+         * @param flags flags to add to
+         * @param resolvers placeholders to add to
+         */
+        void apply(Player player, Set<String> flags, List<TagResolver> resolvers);
+    }
 
     /**
      * @param api practice api
@@ -36,10 +47,23 @@ public final class LobbyScoreboard implements SidebarProvider {
      * @param section template section (lobby, queue, editing)
      */
     public LobbyScoreboard(PracticeApi api, MessageService messages, ConfigFile file, String section) {
+        this(api, messages, file, section, (player, flags, resolvers) -> {
+        });
+    }
+
+    /**
+     * @param api practice api
+     * @param messages lobby messages
+     * @param file scoreboard.yml
+     * @param section template section (lobby, queue, editing)
+     * @param extras extra placeholders and flags
+     */
+    public LobbyScoreboard(PracticeApi api, MessageService messages, ConfigFile file, String section, Extras extras) {
         this.api = api;
         this.messages = messages;
         this.file = file;
         this.section = section;
+        this.extras = extras;
         reload();
     }
 
@@ -80,6 +104,9 @@ public final class LobbyScoreboard implements SidebarProvider {
             builder.resolvers(MessageService.p("queue_kit", "-"), MessageService.p("queue_type", "-"), MessageService.p("queue_mode", "-"),
                     MessageService.p("queue_time", "00:00"), MessageService.p("queue_min", 0), MessageService.p("queue_max", 0));
         }
+        List<TagResolver> more = new java.util.ArrayList<>();
+        extras.apply(player, flags, more);
+        builder.resolvers(more);
         return builder.build();
     }
 

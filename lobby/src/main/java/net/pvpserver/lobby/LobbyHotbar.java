@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Builds the lobby hotbars (lobby, queue, party leader, party member) from hotbar.yml.
@@ -24,6 +25,7 @@ public final class LobbyHotbar {
     private final ConfigFile file;
     private final MessageService messages;
     private final Map<String, Map<Integer, ItemStack>> layouts = new HashMap<>();
+    private Function<Player, String> override = player -> null;
 
     /**
      * @param api practice api
@@ -70,14 +72,23 @@ public final class LobbyHotbar {
     }
 
     /**
+     * @param chooser picks a layout before the normal rules (e.g. "parkour" during a run), or returns null
+     */
+    public void override(Function<Player, String> chooser) {
+        this.override = chooser;
+    }
+
+    /**
      * Gives the layout matching the player's lobby situation.
      *
      * @param player player
      */
     public void give(Player player) {
-        String layout;
+        String layout = override.apply(player);
         Optional<Party> party = api.parties().partyOf(player);
-        if (api.states().is(player, PlayerState.QUEUE)) {
+        if (layout != null && layouts.containsKey(layout)) {
+            // chosen by the override
+        } else if (api.states().is(player, PlayerState.QUEUE)) {
             layout = party.isPresent() ? "party-queue" : "queue";
         } else if (party.isPresent()) {
             layout = party.get().isLeader(player.getUniqueId()) ? "party-leader" : "party-member";

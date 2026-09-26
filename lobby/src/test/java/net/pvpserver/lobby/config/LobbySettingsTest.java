@@ -119,6 +119,29 @@ class LobbySettingsTest {
     }
 
     @Test
+    void anOldConfigWithoutTheNewSectionsReadsTheBundledDefaults() throws InvalidConfigurationException {
+        // A 1.1 config.yml merged with the bundled defaults, as ConfigFile loads it.
+        YamlConfiguration old = yaml("""
+                spawn: ""
+                tune-world: true
+                void-y: 0
+                double-jump: {enabled: false}
+                """);
+        old.setDefaults(bundled("config.yml"));
+        old.options().copyDefaults(true);
+        List<String> warnings = new ArrayList<>();
+        LobbySettings settings = LobbySettings.read(old, warnings);
+        assertEquals(List.of(), warnings);
+        LobbySettings defaults = LobbySettings.read(bundled("config.yml"), new ArrayList<>());
+        assertEquals(defaults.ambient(), settings.ambient(), "emitter types come from the defaults");
+        assertEquals(defaults.zones(), settings.zones(), "zone names come from the defaults");
+        assertEquals(defaults.bossbar(), settings.bossbar());
+        assertEquals(defaults.welcome(), settings.welcome());
+        assertFalse(settings.doubleJump().enabled(), "values in the file still win");
+        assertEquals("<gold><bold>Ranked Hall", settings.zones().names().get("ranked"));
+    }
+
+    @Test
     void emptyConfigUsesDefaults() throws InvalidConfigurationException {
         List<String> warnings = new ArrayList<>();
         LobbySettings settings = LobbySettings.read(yaml(""), warnings);

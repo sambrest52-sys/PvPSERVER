@@ -123,7 +123,7 @@ npcs:
       main-hand: NAME_TAG
       off-hand: CAKE
   info:
-    action: message:lobby.info
+    action: message:lobby.info-npc
     hologram:
       - "<green><bold>SERVER INFO"
       - "<gray>Rules, Discord and store"

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Lobby commands: spawn, setspawn, settings, stats, leaderboard, cosmetics, kiteditor, fly, lbholo.
+ * Lobby commands: spawn, lobby, setspawn, settings, stats, leaderboard, cosmetics, kiteditor, fly, lbholo.
  */
 public final class LobbyCommands {
 
@@ -35,7 +35,7 @@ public final class LobbyCommands {
     public static List<BaseCommand> create(PvPLobby plugin) {
         MessageService m = plugin.messages();
         List<BaseCommand> commands = new ArrayList<>();
-        commands.add(new Simple(m, "spawn", List.of("lobby", "hub", "l"), "pvp.command.spawn", "Return to the lobby", p -> {
+        java.util.function.Consumer<Player> spawn = p -> {
             if (plugin.api().combat().tags().isTagged(p) && !p.hasPermission("pvp.staff")) {
                 m.send(p, "lobby.combat-tagged");
                 return;
@@ -49,10 +49,21 @@ public final class LobbyCommands {
                     plugin.api().bridges().get(net.pvpserver.core.api.bridge.QueueBridge.class).ifPresent(q -> q.leaveQueue(p));
                     plugin.lobby().sendToLobby(p);
                 }
-                default -> plugin.lobby().sendToLobby(p);
+                default -> {
+                    if (plugin.features().parkour().running(p)) {
+                        plugin.features().parkour().cancel(p, true);
+                    }
+                    plugin.lobby().sendToLobby(p);
+                }
             }
-        }));
+        };
+        commands.add(new Simple(m, "spawn", List.of("hub", "l"), "pvp.command.spawn", "Return to the lobby", spawn));
+        commands.add(new LobbyAdminCommand(plugin, spawn));
         commands.add(new Simple(m, "setspawn", List.of("setlobby"), "pvp.admin.lobby", "Set the lobby spawn", p -> {
+            if (!p.getWorld().equals(plugin.lobbyWorld().world())) {
+                m.send(p, "lobby.wrong-world", MessageService.p("world", plugin.lobbyWorld().world().getName()));
+                return;
+            }
             plugin.lobby().setSpawn(p.getLocation());
             m.send(p, "lobby.spawn-set");
         }));

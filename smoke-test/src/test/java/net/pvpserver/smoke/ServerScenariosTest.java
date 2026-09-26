@@ -121,57 +121,6 @@ class ServerScenariosTest extends SmokeTestBase {
 
     // ------------------------------------------------------------------ importing arenas
 
-    /** Writes a gzip NBT compound like WorldEdit does (only the tag types a Sponge schematic needs). */
-    private static byte[] nbt(String rootName, java.util.Map<String, Object> root) throws java.io.IOException {
-        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
-        try (java.io.DataOutputStream out = new java.io.DataOutputStream(new java.util.zip.GZIPOutputStream(bytes))) {
-            out.writeByte(10);
-            out.writeUTF(rootName);
-            compound(out, root);
-        }
-        return bytes.toByteArray();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void compound(java.io.DataOutputStream out, java.util.Map<String, Object> map) throws java.io.IOException {
-        for (var entry : map.entrySet()) {
-            Object v = entry.getValue();
-            int type = v instanceof Short ? 2 : v instanceof Integer ? 3 : v instanceof byte[] ? 7 : v instanceof String ? 8
-                    : v instanceof List<?> ? 9 : v instanceof java.util.Map<?, ?> ? 10 : v instanceof int[] ? 11 : -1;
-            out.writeByte(type);
-            out.writeUTF(entry.getKey());
-            value(out, v);
-        }
-        out.writeByte(0);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void value(java.io.DataOutputStream out, Object v) throws java.io.IOException {
-        if (v instanceof Short sh) {
-            out.writeShort(sh);
-        } else if (v instanceof Integer i) {
-            out.writeInt(i);
-        } else if (v instanceof byte[] b) {
-            out.writeInt(b.length);
-            out.write(b);
-        } else if (v instanceof String str) {
-            out.writeUTF(str);
-        } else if (v instanceof List<?> list) {
-            out.writeByte(list.isEmpty() ? 0 : list.get(0) instanceof String ? 8 : 10);
-            out.writeInt(list.size());
-            for (Object element : list) {
-                value(out, element);
-            }
-        } else if (v instanceof java.util.Map<?, ?> m) {
-            compound(out, (java.util.Map<String, Object>) m);
-        } else if (v instanceof int[] ints) {
-            out.writeInt(ints.length);
-            for (int i : ints) {
-                out.writeInt(i);
-            }
-        }
-    }
-
     /** A 15x4x15 quartz sumo disc (radius 6) with [A] and [B] signs, as a Sponge v2 schematic. */
     private static byte[] sumoSchematic() throws java.io.IOException {
         int w = 15;
@@ -282,16 +231,17 @@ class ServerScenariosTest extends SmokeTestBase {
         World world = admin.getWorld();
         // On Paper the chunk a player stands in is always loaded; MockBukkit needs it loaded explicitly.
         admin.getLocation().getChunk().load();
+        // The lobby has its own displays (NPC name plates, the wall...); count only what /lbholo adds.
+        long before = world.getEntitiesByClass(TextDisplay.class).stream().filter(TextDisplay::isValid).count();
         assertTrue(run(admin, "lbholo create topelo global ELO"));
         ticks(5);
-        List<TextDisplay> displays = world.getEntitiesByClass(TextDisplay.class).stream().toList();
-        assertFalse(displays.isEmpty(), "hologram spawned");
+        assertEquals(before + 1, world.getEntitiesByClass(TextDisplay.class).stream().filter(TextDisplay::isValid).count(), "hologram spawned");
         assertTrue(new File(lobby.getDataFolder(), "holograms.yml").exists());
         assertTrue(YamlConfiguration.loadConfiguration(new File(lobby.getDataFolder(), "holograms.yml")).contains("holograms.topelo"),
                 "hologram persisted");
         assertTrue(run(admin, "lbholo delete topelo"));
         ticks(2);
-        assertTrue(world.getEntitiesByClass(TextDisplay.class).stream().noneMatch(TextDisplay::isValid), "hologram removed");
+        assertEquals(before, world.getEntitiesByClass(TextDisplay.class).stream().filter(TextDisplay::isValid).count(), "hologram removed");
     }
 
     @Test

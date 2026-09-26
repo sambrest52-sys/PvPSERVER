@@ -230,28 +230,28 @@ public record LobbySettings(WorldSettings world, String legacySpawn, int voidY, 
             worldName = "pvp_lobby";
         }
         WorldMode mode = r.enumValue("world.mode", WorldMode.class, WorldMode.GENERATED);
-        WorldSettings world = new WorldSettings(worldName, mode, root.getLong("world.seed", 1337),
+        WorldSettings world = new WorldSettings(worldName, mode, r.number("world.seed", 1337),
                 r.intRange("world.floor-y", 64, -32, 280), r.longRange("world.time", 6000, 0, 24000),
-                root.getBoolean("world.border", true), root.getBoolean("world.tune-world", root.getBoolean("tune-world", true)));
+                r.bool("world.border", true), r.bool("world.tune-world", r.bool("tune-world", true)));
 
-        DoubleJump doubleJump = new DoubleJump(root.getBoolean("double-jump.enabled", true), r.string("double-jump.permission", ""),
+        DoubleJump doubleJump = new DoubleJump(r.bool("double-jump.enabled", true), r.string("double-jump.permission", ""),
                 r.doubleRange("double-jump.forward", 1.2, 0, 5), r.doubleRange("double-jump.up", 0.9, 0, 5),
                 r.longRange("double-jump.cooldown-ticks", 20, 0, 1200));
-        Pads pads = new Pads(root.getBoolean("launch-pads.enabled", true), r.sound("launch-pads.sound", "entity.firework_rocket.launch"),
+        Pads pads = new Pads(r.bool("launch-pads.enabled", true), r.sound("launch-pads.sound", "entity.firework_rocket.launch"),
                 r.particle("launch-pads.particle", Particle.CLOUD), r.longRange("launch-pads.cooldown-ticks", 15, 0, 1200));
-        Portals portals = new Portals(root.getBoolean("portals.enabled", true), r.sound("portals.sound", "block.portal.trigger"),
+        Portals portals = new Portals(r.bool("portals.enabled", true), r.sound("portals.sound", "block.portal.trigger"),
                 r.longRange("portals.cooldown-ticks", 40, 0, 1200), r.doubleRange("portals.push-back", 0.7, 0, 3),
-                root.getBoolean("portals.particles", true));
-        Npcs npcs = new Npcs(root.getBoolean("npcs.enabled", true), root.getBoolean("npcs.look-at-players", true),
+                r.bool("portals.particles", true));
+        Npcs npcs = new Npcs(r.bool("npcs.enabled", true), r.bool("npcs.look-at-players", true),
                 r.doubleRange("npcs.look-range", 10, 1, 32), r.longRange("npcs.update-interval-ticks", 40, 5, 1200),
                 r.longRange("npcs.click-cooldown-ms", 400, 0, 10000));
-        ParkourSettings parkour = new ParkourSettings(root.getBoolean("parkour.enabled", true),
+        ParkourSettings parkour = new ParkourSettings(r.bool("parkour.enabled", true),
                 r.intRange("parkour.leaderboard-size", 10, 1, 25), r.intRange("parkour.max-minutes", 30, 1, 240),
                 r.sound("parkour.start-sound", "block.note_block.pling"), r.sound("parkour.checkpoint-sound", "entity.experience_orb.pickup"),
                 r.sound("parkour.finish-sound", "ui.toast.challenge_complete"), r.sound("parkour.fail-sound", "entity.villager.no"),
-                root.getBoolean("parkour.broadcast-records", true), root.getStringList("parkour.rewards.first-finish"),
+                r.bool("parkour.broadcast-records", true), root.getStringList("parkour.rewards.first-finish"),
                 root.getStringList("parkour.rewards.personal-best"));
-        Eggs eggs = new Eggs(root.getBoolean("eggs.enabled", true), r.sound("eggs.sound", "entity.player.levelup"),
+        Eggs eggs = new Eggs(r.bool("eggs.enabled", true), r.sound("eggs.sound", "entity.player.levelup"),
                 root.getStringList("eggs.reward-commands"), root.getStringList("eggs.complete.commands"),
                 root.getStringList("eggs.complete.permissions"));
 
@@ -267,10 +267,10 @@ public record LobbySettings(WorldSettings world, String legacySpawn, int voidY, 
         if (stats.isEmpty()) {
             stats.add(StatField.ELO);
         }
-        WallSettings wall = new WallSettings(root.getBoolean("leaderboard-wall.enabled", true),
+        WallSettings wall = new WallSettings(r.bool("leaderboard-wall.enabled", true),
                 root.getStringList("leaderboard-wall.kits").stream().map(k -> k.toLowerCase(Locale.ROOT)).toList(), List.copyOf(stats),
                 r.intRange("leaderboard-wall.rotate-seconds", 10, 2, 600), r.intRange("leaderboard-wall.entries", 10, 1, 15),
-                r.argb("leaderboard-wall.background", 0xB0141420), root.getBoolean("leaderboard-wall.icons", true));
+                r.argb("leaderboard-wall.background", 0xB0141420), r.bool("leaderboard-wall.icons", true));
 
         Map<String, EmitterType> emitters = new LinkedHashMap<>();
         ConfigurationSection emitterSection = root.getConfigurationSection("ambient.emitters");
@@ -282,42 +282,55 @@ public record LobbySettings(WorldSettings world, String legacySpawn, int voidY, 
                 }
             }
         }
-        Ambient ambient = new Ambient(root.getBoolean("ambient.enabled", true), r.intRange("ambient.interval-ticks", 6, 1, 100),
+        Ambient ambient = new Ambient(r.bool("ambient.enabled", true), r.intRange("ambient.interval-ticks", 6, 1, 100),
                 r.doubleRange("ambient.view-distance", 32, 4, 128), emitters);
 
         Map<String, String> zoneNames = new LinkedHashMap<>();
         ConfigurationSection names = root.getConfigurationSection("zones.names");
         if (names != null) {
             for (String id : names.getKeys(false)) {
-                zoneNames.put(id.toLowerCase(Locale.ROOT), names.getString(id, id));
+                String name = names.getString(id);
+                zoneNames.put(id.toLowerCase(Locale.ROOT), name == null ? id : name);
             }
         }
-        Zones zones = new Zones(root.getBoolean("zones.enabled", true), r.sound("zones.sound", "block.note_block.hat"), zoneNames);
+        Zones zones = new Zones(r.bool("zones.enabled", true), r.sound("zones.sound", "block.note_block.hat"), zoneNames);
 
-        Bossbar bossbar = new Bossbar(root.getBoolean("bossbar.enabled", true), r.enumValue("bossbar.color", BossBar.Color.class, BossBar.Color.YELLOW),
+        Bossbar bossbar = new Bossbar(r.bool("bossbar.enabled", true), r.enumValue("bossbar.color", BossBar.Color.class, BossBar.Color.YELLOW),
                 r.enumValue("bossbar.overlay", BossBar.Overlay.class, BossBar.Overlay.PROGRESS), r.intRange("bossbar.seconds-per-tip", 12, 2, 600),
                 root.getStringList("bossbar.tips"));
-        Announcements announcements = new Announcements(root.getBoolean("announcements.enabled", true),
-                r.intRange("announcements.interval-seconds", 300, 10, 86400), root.getBoolean("announcements.lobby-only", false),
+        Announcements announcements = new Announcements(r.bool("announcements.enabled", true),
+                r.intRange("announcements.interval-seconds", 300, 10, 86400), r.bool("announcements.lobby-only", false),
                 root.getStringList("announcements.messages"));
-        Welcome welcome = new Welcome(root.getBoolean("welcome.title.enabled", true), r.string("welcome.title.title", ""),
+        Welcome welcome = new Welcome(r.bool("welcome.title.enabled", true), r.string("welcome.title.title", ""),
                 r.string("welcome.title.subtitle", ""), r.intRange("welcome.title.fade-in", 10, 0, 200), r.intRange("welcome.title.stay", 50, 0, 600),
                 r.intRange("welcome.title.fade-out", 15, 0, 200), r.optionalSound("welcome.sound", "entity.player.levelup"),
                 (float) r.doubleRange("welcome.sound-volume", 0.6, 0, 10), (float) r.doubleRange("welcome.sound-pitch", 1.4, 0.5, 2));
-        Cosmetics cosmetics = new Cosmetics(root.getBoolean("cosmetics.trails.enabled", true), r.intRange("cosmetics.trails.interval-ticks", 3, 1, 40),
-                root.getBoolean("cosmetics.join-effects.enabled", true));
+        Cosmetics cosmetics = new Cosmetics(r.bool("cosmetics.trails.enabled", true), r.intRange("cosmetics.trails.interval-ticks", 3, 1, 40),
+                r.bool("cosmetics.join-effects.enabled", true));
         Performance performance = new Performance(r.intRange("performance.max-entities", 120, 0, 1000),
                 r.intRange("performance.hologram-updates-per-tick", 8, 1, 200));
-        return new LobbySettings(world, r.string("spawn", ""), root.getInt("void-y", 0), r.optionalSound("void.sound", "entity.enderman.teleport"),
+        return new LobbySettings(world, r.string("spawn", ""), (int) r.number("void-y", 0), r.optionalSound("void.sound", "entity.enderman.teleport"),
                 doubleJump, pads, portals, npcs, parkour, eggs, wall, ambient, zones, bossbar, announcements, welcome, cosmetics, performance);
     }
 
-    /** Reads values with range checks, recording warnings. */
+    /**
+     * Reads values with range checks, recording warnings. Getters that take an explicit fallback ignore the bundled
+     * defaults of a merged config file (a 1.1 config.yml without the new sections), so values are read without one
+     * and the fallback applies only when neither the file nor the defaults have the key.
+     */
     private record Reader(ConfigurationSection root, List<String> warnings) {
 
         String string(String path, String fallback) {
             String value = root.getString(path);
             return value == null ? fallback : value;
+        }
+
+        boolean bool(String path, boolean fallback) {
+            return root.contains(path) ? root.getBoolean(path) : fallback;
+        }
+
+        long number(String path, long fallback) {
+            return root.contains(path) ? root.getLong(path) : fallback;
         }
 
         int intRange(String path, int fallback, int min, int max) {
@@ -382,7 +395,7 @@ public record LobbySettings(WorldSettings world, String legacySpawn, int voidY, 
         }
 
         String sound(String path, String fallback) {
-            String value = root.getString(path, fallback).trim().toLowerCase(Locale.ROOT);
+            String value = string(path, fallback).trim().toLowerCase(Locale.ROOT);
             if (!SOUND.matcher(value).matches()) {
                 warnings.add(path + ": \"" + value + "\" is not a sound id, using " + fallback);
                 return fallback;
@@ -391,7 +404,7 @@ public record LobbySettings(WorldSettings world, String legacySpawn, int voidY, 
         }
 
         String optionalSound(String path, String fallback) {
-            String value = root.getString(path, fallback);
+            String value = string(path, fallback);
             return value.isBlank() ? "" : sound(path, fallback);
         }
 
@@ -434,7 +447,7 @@ public record LobbySettings(WorldSettings world, String legacySpawn, int voidY, 
                 warnings.add(path + ": expected particle/count/offset/speed");
                 return null;
             }
-            String name = section.getString("particle", "");
+            String name = String.valueOf(section.getString("particle"));
             Particle particle;
             try {
                 particle = Particle.valueOf(name.trim().toUpperCase(Locale.ROOT));
@@ -452,7 +465,7 @@ public record LobbySettings(WorldSettings world, String legacySpawn, int voidY, 
                 return null;
             }
             double[] offset = {0, 0, 0};
-            String rawOffset = section.getString("offset", "0 0 0");
+            String rawOffset = section.contains("offset") ? String.valueOf(section.getString("offset")) : "0 0 0";
             String[] parts = rawOffset.trim().split("[\\s,]+");
             try {
                 if (parts.length != 3) {
@@ -465,12 +478,13 @@ public record LobbySettings(WorldSettings world, String legacySpawn, int voidY, 
                 warnings.add(path + ".offset: expected \"x y z\", using 0 0 0");
                 offset = new double[]{0, 0, 0};
             }
-            int count = section.getInt("count", 1);
+            int count = section.contains("count") ? section.getInt("count") : 1;
             if (count < 0 || count > 100) {
                 warnings.add(path + ".count: must be 0-100, using 1");
                 count = 1;
             }
-            return new EmitterType(particle, count, offset[0], offset[1], offset[2], section.getDouble("speed", 0), color);
+            double speed = section.contains("speed") ? section.getDouble("speed") : 0;
+            return new EmitterType(particle, count, offset[0], offset[1], offset[2], speed, color);
         }
     }
 }

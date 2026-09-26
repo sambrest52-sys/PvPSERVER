@@ -673,7 +673,7 @@ public final class HubGenerator {
             add(fr, side * 4, 6, f + 2, "lantern[hanging=false]");
         }
         BlockPos nook = block(fr, 3, 10, f + 1);
-        egg("ranked", nook.x(), nook.y(), nook.z(), "sniffer_egg[hatch=0]");
+        egg("ranked", nook.x(), nook.y(), nook.z(), "turtle_egg[eggs=1,hatch=0]");
     }
 
     private void unrankedHall(Frame fr) {
@@ -855,7 +855,7 @@ public final class HubGenerator {
             c.lanternPost(fr.x(side * 6, -5), f + 1, fr.z(side * 6, -5), "deepslate_brick_wall", 3, "lantern");
         }
         BlockPos corner = block(fr, 10, 6, f + 1);
-        egg("hall-of-fame", corner.x(), corner.y(), corner.z(), "sniffer_egg[hatch=0]");
+        egg("hall-of-fame", corner.x(), corner.y(), corner.z(), "turtle_egg[eggs=1,hatch=0]");
     }
 
     private void cosmeticsShop(Frame fr) {
@@ -1104,7 +1104,7 @@ public final class HubGenerator {
         add(fr, 0, 4, f + 5, "lantern[hanging=true]");
         holograms.put("kit-editor", at(fr, 0, -1.5, f + 8.4));
         BlockPos hidden = block(fr, 8, 7, f + 2);
-        egg("kit-editor", hidden.x(), hidden.y(), hidden.z(), "sniffer_egg[hatch=0]");
+        egg("kit-editor", hidden.x(), hidden.y(), hidden.z(), "turtle_egg[eggs=1,hatch=0]");
     }
 
     // ------------------------------------------------------------------ parkour
@@ -1132,7 +1132,7 @@ public final class HubGenerator {
         c.set(startX, base + 1, startZ, "light_weighted_pressure_plate[power=0]");
         c.set(startX, base, startZ, "emerald_block");
         holograms.put("parkour", Point.of(startX + 0.5, base + 3.4, startZ + 0.5));
-        zones.add(new Zone("parkour", ax, az, PARKOUR_RADIUS + 6));
+        zones.add(new Zone("parkour", ax, az, PARKOUR_RADIUS + 6, base - 2));
 
         // Spire at the axis, up to the summit platform.
         int count = 30;
