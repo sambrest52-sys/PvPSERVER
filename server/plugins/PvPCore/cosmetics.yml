@@ -1,6 +1,8 @@
 # Cosmetics. Built-in effect ids:
 #   kill-effects: lightning, explosion, blood, flames, hearts, firework, souls, notes
 #   death-animations: smoke, totem, spiral, ascend
+#   trails (lobby only): cloud, hearts, flames, notes, magic, emerald, snow, rainbow
+#   join-effects (lobby only): firework, lightning, totem, portal, enchant
 # Omit "permission" to make a cosmetic free. Join messages support <player>.
 
 kill-effects:
@@ -23,3 +25,21 @@ join-messages:
   vip: {display: "<green>VIP Arrival", icon: EMERALD, permission: pvp.cosmetic.join.vip, message: "<green>✦ <white><player></white> has joined the lobby!"}
   legend: {display: "<gold>Legendary", icon: GOLD_INGOT, permission: pvp.cosmetic.join.legend, message: "<gold><bold>»</bold> <yellow><player></yellow> <gold>descends upon the lobby <bold>«</bold>"}
   storm: {display: "<aqua>Storm", icon: TRIDENT, permission: pvp.cosmetic.join.storm, message: "<aqua>⚡ <white><player></white> <aqua>rode in on a storm."}
+
+# Lobby-only cosmetics (PvPLobby plays them).
+trails:
+  cloud: {display: "<white>Cloud", icon: WHITE_WOOL}
+  hearts: {display: "<red>Hearts", icon: POPPY, permission: pvp.cosmetic.trail.hearts}
+  flames: {display: "<gold>Flames", icon: BLAZE_POWDER, permission: pvp.cosmetic.trail.flames}
+  notes: {display: "<green>Notes", icon: NOTE_BLOCK, permission: pvp.cosmetic.trail.notes}
+  magic: {display: "<light_purple>Magic", icon: AMETHYST_SHARD, permission: pvp.cosmetic.trail.magic}
+  emerald: {display: "<dark_green>Emerald", icon: EMERALD, permission: pvp.cosmetic.trail.emerald}
+  snow: {display: "<aqua>Snow", icon: SNOWBALL, permission: pvp.cosmetic.trail.snow}
+  rainbow: {display: "<gradient:red:gold:green:aqua:light_purple>Rainbow", icon: PRISMARINE_CRYSTALS, permission: pvp.cosmetic.trail.rainbow}
+
+join-effects:
+  firework: {display: "<light_purple>Firework", icon: FIREWORK_ROCKET, permission: pvp.cosmetic.joineffect.firework}
+  lightning: {display: "<yellow>Lightning", icon: LIGHTNING_ROD, permission: pvp.cosmetic.joineffect.lightning}
+  totem: {display: "<gold>Totem", icon: TOTEM_OF_UNDYING, permission: pvp.cosmetic.joineffect.totem}
+  portal: {display: "<dark_purple>Portal", icon: ENDER_EYE, permission: pvp.cosmetic.joineffect.portal}
+  enchant: {display: "<aqua>Enchant", icon: ENCHANTED_BOOK}

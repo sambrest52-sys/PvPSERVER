@@ -6,7 +6,7 @@ from one Maven project:
 | Plugin | What it does |
 |--------|--------------|
 | **PvPCore** | Shared services: async SQLite/MySQL storage, profiles and settings, ranks (+ LuckPerms), kits and per-player layouts, knockback profiles, combat rules, parties, arena templates with pooled instancing, sidebars and tab list, chat, moderation, cosmetics, CPS/reach alerts, ELO, stats, leaderboards |
-| **PvPLobby** | Spawn hub: protection, double jump, hotbar, queue/stats/settings/cosmetics/leaderboard menus, kit editor, leaderboard holograms |
+| **PvPLobby** | A generated floating hub (or your own imported map) with player NPCs, walk-in portals, launch pads, a sky parkour, hidden eggs, a leaderboard wall, ambient particles, tips and announcements; protection, double jump, hotbar, menus and kit editor |
 | **PvPDuels** | 1v1/2v2 ranked and unranked queues with a widening ELO window, matches with countdown, rounds, kit rules, results and inventory viewer, `/duel` requests, rematches, party fights, spectating |
 | **PvPFFA** | Ranked and unranked FFA arenas with instant respawn, killstreaks, kill rewards, safe zones and combat-log punishment |
 
@@ -38,14 +38,15 @@ The `server/` folder already contains tuned configs:
 
 It also has default copies of every plugin config in `plugins/PvP*/`.
 
-On first start PvPCore generates 21 themed arenas (see [Arenas](#arenas)) and ships 12 kits (see [Kits](#kits)).
-The server is playable immediately: join, right-click the swords in your hotbar and queue.
+On first start PvPCore generates 21 themed arenas (see [Arenas](#arenas)) and ships 12 kits (see [Kits](#kits)),
+and PvPLobby builds the lobby hub in its own `pvp_lobby` world (see [The lobby](#the-lobby)). The server is
+playable immediately: join, click an NPC or walk into a portal, and fight.
 
 ### First steps as an admin
 
 1. `/op <you>` (or `/rank set <you> owner`).
-2. Stand where the lobby spawn should be and run `/setspawn`.
-3. Optionally place leaderboard holograms: `/lbholo create top-nodebuff nodebuff ELO`.
+2. Walk around the hub. `/lobby info` shows what it holds; `/lobby set ...` moves things around.
+3. Optional: replace the hub with your own map ([Importing a custom lobby](#importing-a-custom-lobby)).
 4. Add your own arenas: build them in game ([Adding arenas](#adding-arenas)) or import downloaded maps
    ([Importing arenas](#importing-arenas)). Tune knockback with `/kb`.
 
@@ -55,7 +56,7 @@ The server is playable immediately: join, right-click the swords in your hotbar 
 |---------|--------|
 | `mvn clean package` | Four jars in `*/target/` and copied to `server/plugins/` (unit tests included) |
 | `mvn test` | Unit and SQLite integration tests (ELO, parties, queue matching, repositories...) |
-| `mvn -Psmoke verify` | Also boots the real jars inside MockBukkit and plays 30 end-to-end scenarios (see below) |
+| `mvn -Psmoke verify` | Also boots the real jars inside MockBukkit and plays 42 end-to-end scenarios (see below) |
 | `... -Dpvp.test.mysql.host=127.0.0.1 -Dpvp.test.mysql.username=u -Dpvp.test.mysql.password=p` | Adds the MySQL/MariaDB runs: the repository contract and a full ranked match on the server (`-Dpvp.test.mysql.database`, default `practice_test`; `-Dpvp.test.mysql.type=MARIADB` to test that setting) |
 
 The smoke scenarios cover:
@@ -72,14 +73,20 @@ The smoke scenarios cover:
 - Kit rules: soup healing and spleef digging; importing a `.schem` with marker signs and playing on it; loading a
   world folder.
 - Leaderboard holograms, moderation (freeze, vanish, report, warn, tempban, history, unban) and private messages.
+- The lobby: joining onto the generated hub (world rules, border, welcome title, tips bar, no warnings), every
+  NPC's action and invulnerability, live queue counts on holograms, the ranked portal and the FFA gate, every
+  launch pad, void rescue, a full parkour run with checkpoints, falls and best times, eggs and their reward,
+  clickable blocks, protection, the rotating leaderboard wall, `/lobby set`, `/lobby reload`, `/pvpadmin reload`,
+  `/lobby regenerate`, importing a schematic with sign tags and a world folder, and choosing lobby cosmetics.
 
 ---
 
 ## Gameplay overview
 
-* **Lobby**: hotbar with Unranked, Ranked, FFA, Party, Spectate, Leaderboards, Kit Editor, Stats and Settings.
-  Players take no damage or hunger and are rescued from the void. Double jump can be toggled per player.
-  The sidebar and tab list show live online, fighting and queued counts.
+* **Lobby**: a floating hub with NPCs, portals and pads that queue you, a sky parkour and hidden eggs (see
+  [The lobby](#the-lobby)), plus the hotbar with Unranked, Ranked, FFA, Party, Spectate, Leaderboards, Kit Editor,
+  Stats and Settings. Players take no damage or hunger and are rescued from the void. Double jump can be toggled
+  per player. The sidebar and tab list show live online, fighting and queued counts and the area you are in.
 * **Queues**: pick a kit in the queue menu. Ranked pairs players whose ELO difference fits inside *both* players'
   search windows, which start at ±50 and grow by 25 every 5 s (configurable). Party leaders with 2 members
   queue 2v2. Solo players can also queue 2v2 and are paired into teams.
@@ -148,7 +155,8 @@ All commands have tab completion. Player commands are granted by default through
 
 | Command | Aliases | Description | Permission |
 |---------|---------|-------------|------------|
-| `/spawn` | `/lobby`, `/hub`, `/l` | Return to the lobby (leaves queue/FFA/spectating) | `pvp.command.spawn` |
+| `/spawn` | `/hub`, `/l` | Return to the lobby (leaves queue/FFA/spectating/parkour) | `pvp.command.spawn` |
+| `/lobby` | | Same as `/spawn` for players; admins get the [lobby commands](#lobby-commands) | `pvp.command.spawn` |
 | `/queue join <kit> <ranked\|unranked> [1v1\|2v2]` | `/q` | Join a queue (also `/queue ranked`, `/queue unranked`, `/queue leave`) | `pvp.command.queue` |
 | `/duel <player> [kit]` | `/1v1`, `/fight`, `/challenge` | Challenge a player (kit, arena, rounds menus) | `pvp.command.duel` |
 | `/duel accept\|deny <player>` | | Answer a duel request | `pvp.command.duel` |
@@ -163,7 +171,7 @@ All commands have tab completion. Player commands are granted by default through
 | `/stats [player]` | `/profile` | Per-kit statistics | `pvp.command.stats` |
 | `/leaderboard` | `/lb`, `/top` | Leaderboards menu | `pvp.command.leaderboard` |
 | `/settings` | `/options`, `/prefs` | Scoreboard, duel requests, PMs, spectators, lobby players, cosmetics, join messages, double jump, time of day | `pvp.command.settings` |
-| `/cosmetics` | | Kill effects, death animations, join messages | `pvp.command.cosmetics` |
+| `/cosmetics` | | Kill effects, death animations, join messages, lobby trails and join effects | `pvp.command.cosmetics` |
 | `/msg <player> <message>` | `/tell`, `/w`, `/m`, `/pm` | Private message | `pvp.command.msg` |
 | `/reply <message>` | `/r` | Reply | `pvp.command.msg` |
 | `/ignore <player\|list>`, `/unignore <player>` | | Ignore list (also blocks PMs, duels, invites) | `pvp.command.ignore` |
@@ -203,7 +211,8 @@ Durations: `30s`, `10m`, `12h`, `7d`, `2w`, `1mo`, `1y`, combinations like `1d12
 | `/rank set <player> <rank>`, `/rank list`, `/rank info <player>` | Built-in ranks (`/setrank`) | `pvp.admin.rank` |
 | `/arena ...` | Arena authoring and pool control (see below) | `pvp.admin.arena` |
 | `/matches [cancel <player>]` | List or cancel live matches | `pvp.admin.matches` |
-| `/setspawn` | Set the lobby spawn | `pvp.admin.lobby` |
+| `/setspawn` | Set the lobby spawn (same as `/lobby set spawn`) | `pvp.admin.lobby` |
+| `/lobby <sub>` | Rebuild, import and edit the lobby: see [Lobby commands](#lobby-commands) | `pvp.admin.lobby` |
 | `/lbholo create <id> <kit\|global> <stat>`, `delete`, `list`, `reload` | Leaderboard holograms | `pvp.admin.lobby` |
 | `/fly` | Lobby flight | `pvp.lobby.fly` |
 
@@ -218,7 +227,8 @@ Durations: `30s`, `10m`, `12h`, `7d`, `2w`, `1mo`, `1y`, combinations like `1d12
 | `pvp.chat.bypass` | op | Bypass slow mode, filter, chat mute |
 | `pvp.party.large` | false | `party.max-size-large` instead of `party.max-size` |
 | `pvp.lobby.build` | op | Build in the lobby while in creative |
-| `pvp.cosmetic.<type>.<id>` | false | Cosmetics, e.g. `pvp.cosmetic.kill.lightning` (see `cosmetics.yml`) |
+| `pvp.cosmetic.<type>.<id>` | false | Cosmetics, e.g. `pvp.cosmetic.kill.lightning`, `pvp.cosmetic.trail.flames` (see `cosmetics.yml`) |
+| `pvp.lobby.fly` | op | `/fly` in the lobby |
 
 ---
 
@@ -238,10 +248,13 @@ every plugin.
 | `PvPCore/kb.yml` | Knockback profiles (also editable with `/kb`) |
 | `PvPCore/ranks.yml` | Built-in ranks and the LuckPerms switch |
 | `PvPCore/arenas.yml` + `arenas/*.arena` | Arena definitions (spawns, tags, build limit, void Y, goals, build area) and block templates. `arenas/generated.yml` records which built-in arenas were installed |
-| `PvPCore/cosmetics.yml` | Kill effects, death animations, join messages and their permissions |
-| `PvPLobby/config.yml` | Spawn, void Y, double jump |
-| `PvPLobby/hotbar.yml` | Hotbar layouts per situation (lobby, queue, party leader/member) |
-| `PvPLobby/menus.yml`, `messages.yml`, `scoreboard.yml`, `holograms.yml` | Menu items, texts, sidebars, holograms |
+| `PvPCore/cosmetics.yml` | Kill effects, death animations, join messages, lobby trails and join effects, and their permissions |
+| `PvPLobby/config.yml` | Lobby world (name, mode, seed, floor height, time, border), double jump, launch pads, portals, NPC behaviour, parkour, eggs and their rewards, leaderboard wall, ambient particle types, zone names, tips boss bar, announcements, welcome title, lobby cosmetics, entity limits |
+| `PvPLobby/layout.yml` | Where everything in the lobby is: spawn, void height, border, NPCs, holograms, portals, launch pads, buttons, parkour, eggs, zones, particle emitters, leaderboard wall. Written when the lobby is generated or imported (previous file kept as `layout.yml.bak`) |
+| `PvPLobby/npcs.yml` | NPC skins, equipment, hologram lines and click actions. Versioned like `kits.yml` |
+| `PvPLobby/hotbar.yml` | Hotbar layouts per situation (lobby, queue, party leader/member, parkour) |
+| `PvPLobby/menus.yml`, `messages.yml`, `scoreboard.yml`, `holograms.yml` | Menu items, texts (including hologram texts under `displays`), sidebars, `/lbholo` holograms |
+| `PvPLobby/data.yml` | Parkour best times and found eggs (written by the plugin) |
 | `PvPDuels/config.yml` | Countdown/round/end timings, ELO search window, ranked unlock requirement, request expiry, max rounds |
 | `PvPDuels/menus.yml`, `messages.yml`, `scoreboard.yml` | Menus, texts, match and spectator sidebars |
 | `PvPFFA/config.yml` | FFA arenas, respawn protection, kill rewards, killstreak rewards, combat-log rules, block decay |
@@ -373,6 +386,145 @@ message).
 Arenas larger than a pool slot (`arenas.slot-spacing` minus twice `arenas.instance-margin`, 480 blocks by default)
 are refused with an error in the console.
 
+## The lobby
+
+![Top-down map of the generated lobby](docs/images/lobby-map.png)
+
+On first start PvPLobby builds a floating hub in its own void world, `pvp_lobby`: about 150 blocks across, walled in
+by an invisible barrier, with a world border, noon forever, no weather and no mobs. Everything is generated from
+code (`world.seed` in `config.yml`); nothing needs to be downloaded. The positions of everything interactive are
+written to `layout.yml`, so you can move things without touching the map.
+
+![Isometric view of the generated lobby](docs/images/lobby-isometric.png)
+
+**The plaza** (spawn): a fountain with a quartz spire and water basins, a star mosaic whose spokes point to each
+zone in its colour, a crossed-swords medallion where players appear, quartz pillars with banners and lanterns,
+planters, benches and cherry trees. Five NPCs stand in an arc in front of the fountain: **Kit Editor, Unranked,
+Ranked, FFA, Stats**. Players spawn looking at them.
+
+**Eight zone islands**, each joined to the plaza by a railed bridge with lantern posts:
+
+| Zone | Where | What is there |
+|------|-------|---------------|
+| Ranked Hall | north | Quartz rotunda with a gold-trimmed dome, a yellow beacon beam, and the **Ranked portal** |
+| Unranked Hall | north-west | Prismarine temple with reflecting pools, a glass skylight, a cyan beacon and the **Unranked portal** |
+| FFA Gate | north-east | Blackstone colosseum wall, soul-fire braziers, crimson growth, a red beacon and the **FFA gate** (drops you into FFA) |
+| Hall of Fame | east | The **leaderboard wall** (global + every ranked kit) and a gold/iron/copper podium with the Leaderboards NPC |
+| Cosmetics Shop | south-east | Boutique with a striped awning, crystal displays, candles, the Cosmetics NPC and an enchanting table |
+| Info Pavilion | south | Birch gazebo with a copper roof and bell, rules and links boards, lecterns and the Info NPC |
+| Party Lounge | south-west | Wooden deck, campfire circle, string lights, cake tables, a jukebox, the Party NPC and a bell for party fights |
+| Kit Workshop | west | Smithy with anvils, smithing and crafting tables (all open the kit editor), a forge and a smoking chimney |
+
+**Sky parkour**: a launch pad at the plaza's south-east edge throws you onto the start island. The course spirals
+around a crystal spire for two loops (30 jumps, 3 checkpoints) to a summit platform with the finish plate and a pad
+back down. Falling returns you to your last checkpoint. The timer shows in the action bar, and the best times
+hologram at the start lists the fastest runs. The hotbar switches to Last Checkpoint / Restart / Leave during a run.
+
+**Around the lobby**:
+- **Launch pads** at the plaza exits fling you to the far halls. Their velocities are solved against Minecraft's
+  movement physics so you land at the entrance.
+- **Ten hidden eggs**: right-click one to find it. Finding them all grants the permissions in `eggs.complete`
+  (by default the Emerald trail and the Totem join effect) and runs optional reward commands.
+- **Clickable blocks**: anvils, lecterns, the enchanting table and bells run actions.
+- **Zones** announce themselves in the action bar when you walk in.
+- **Ambient particles**: fountain spray, falling blossoms, portal curtains, sparkles, soul flames, smoke, notes.
+- **Tips boss bar**, timed **announcements**, and a **welcome title** with a sound on join.
+- **Lobby cosmetics**: particle trails and join effects, picked in `/cosmetics`.
+- A **skyline** of floating islands and four crystal spires beyond the barrier.
+
+### NPCs
+
+NPCs are Paper **Mannequins** (player-shaped entities), with a text display above them. No Citizens or other NPC
+plugin is used. Each NPC in `npcs.yml` has:
+
+- **skin**: `""` (default), `name:<player>` or `texture:<value>[;<signature>]`;
+- **equipment**: armour pieces, and items in the main hand and off hand; leather armour can take a `#RRGGBB` colour;
+- **glowing**;
+- **hologram**: lines with live placeholders such as `<ranked_queued>`, `<ranked_fighting>` and `<ffa>`;
+- **action**, run on left or right click.
+
+The same actions work for portals and buttons: any hotbar action (`queue-ranked`, `queue-unranked`, `ffa`,
+`kit-editor`, `stats`, `leaderboards`, `cosmetics`, `settings`, `spectate`, `party-create`, `party-fight`...),
+`ffa:<arena>`, `parkour`, `spawn`, `warp:<point>`, `message:<key>`, `command:<cmd>` and `console:<cmd>`.
+
+NPC heads follow the nearest player. NPCs cannot be hurt, pushed or dressed.
+
+### Lobby commands
+
+All need `pvp.admin.lobby` (players typing `/lobby` just go to spawn).
+
+| Command | What it does |
+|---------|--------------|
+| `/lobby reload` | Re-read `config.yml`, `npcs.yml` and `layout.yml` and respawn NPCs and holograms (`/pvpadmin reload` does this too) |
+| `/lobby regenerate [seed]` | Rebuild the generated hub (clears exactly the previous blocks, backs up `layout.yml`) |
+| `/lobby import <file\|folder>` / `/lobby imports` | Load a custom lobby, list importable files |
+| `/lobby info` | What the lobby holds: source, counts, entities, parkour runners |
+| `/lobby set spawn` | Spawn at your position and facing (`/setspawn` does the same) |
+| `/lobby set npc <id>` / `set hologram <id>` | Move an NPC or a hologram to where you stand |
+| `/lobby set wall` | Leaderboard wall: stand at the top-left panel, facing the way the panels should face |
+| `/lobby set zone <id> [radius]` | Named zone centred on you |
+| `/lobby pad [power]` | The block you stand on becomes a launch pad towards where you look |
+| `/lobby egg [id]` / `button <action>` | The block you look at becomes a hidden egg / runs an action |
+| `/lobby parkour start\|checkpoint\|finish\|clear` | Build the parkour course from where you stand |
+| `/lobby parkour top` / `parkour reset <player>` | Best times / clear a player's time and eggs |
+| `/lobby remove <npc\|hologram\|zone\|pad\|egg\|button> [id]` | Remove something (pads, eggs and buttons: the nearest one) |
+
+### Performance
+
+The lobby is built for 200+ players:
+- **Entities**: fewer than 60 in the default hub (9 NPCs, their name plates, 11 holograms, 13 wall panels and
+  icons), all non-persistent and tagged, under a hard cap (`performance.max-entities`).
+- **Movement**: portals, pads, plates and zones are hash lookups done only when a player crosses into another
+  block.
+- **Holograms**: live counts are captured once per interval on the main thread and rendered off it. Text changes
+  are applied a few per tick, and only when the text actually changed.
+- **Leaderboard wall**: reads the core's leaderboard cache, which refreshes every few minutes in the background.
+- **Particles**: emitters are spread over several ticks and only sent to players within `ambient.view-distance`.
+- **World**: the hub pastes about 146k blocks once, synchronously at first start (about half a second).
+  Regenerating or importing later uses the tick-budgeted block paster.
+
+## Importing a custom lobby
+
+The generated hub is the default; an imported map replaces it until you run `/lobby regenerate`. Step by step:
+
+1. **Build** your lobby anywhere (a creative server, singleplayer...).
+2. **Tag it with signs.** Put the tag in square brackets on any line of a sign:
+
+   | Sign | Meaning |
+   |------|---------|
+   | `[spawn]` | Where players appear. They face the way you faced when placing the sign |
+   | `[npc ranked]` | NPC from `npcs.yml` (`ranked`, `unranked`, `ffa`, `kit editor`, `stats`, `leaderboards`, `cosmetics`, `party`, `info`). It faces the sign's text side |
+   | `[hologram parkour]` | Floating text: `parkour` (best times), `rules`, `links`, `welcome`... (texts in `messages.yml` under `displays`) |
+   | `[portal ranked]` | Walk-in portal 3 wide and 4 high, with the sign at the bottom centre of the doorway (`ranked`, `unranked`, `ffa`, `ffa nodebuff`, `kit editor`...) |
+   | `[pad]` / `[pad 3]` | Launch pad pushing players the way you faced (the number is the power) |
+   | `[parkour start]`, `[checkpoint 1]`, `[checkpoint 2]`..., `[parkour finish]` | Parkour course. Unnumbered checkpoints are ordered from the start |
+   | `[egg]` / `[egg roof]` | Hidden egg (the sign becomes a dragon egg) |
+   | `[button kit editor]` | Makes the block *below* the sign run an action |
+   | `[zone ranked 15]` | Zone announced when entered (names in `config.yml` `zones.names`) |
+   | `[particles fountain]` | Ambient emitter (types in `config.yml` `ambient.emitters`) |
+   | `[wall]` / `[wall 5]` | Leaderboard wall: the sign marks the top-left panel and faces the viewers |
+   | `[border 200]`, `[void]` | World border size, void height |
+
+   Tagged signs disappear on import: start and checkpoint signs become light pressure plates, finish and pad signs
+   heavy pressure plates, and egg signs dragon eggs.
+3. **Export it.** For a schematic, select the build with WorldEdit and run `//copy` then `//schem save mylobby`.
+   Or use the whole world folder.
+4. **Drop it** into **`plugins/PvPLobby/imports/`**: `mylobby.schem`, a legacy `.schematic`, or a world folder
+   containing `level.dat`.
+5. **Import it** in game: `/lobby imports` lists what is there, and `/lobby import mylobby` loads it.
+   - A schematic is pasted into `pvp_lobby` so that the `[spawn]` sign lands at `world.floor-y + 1`. The previous
+     lobby's blocks are cleared first.
+   - A world folder replaces the `pvp_lobby` world entirely. Players are moved out and back, and its signs are read
+     from the chunks around its spawn.
+   - The import reports how many tags it used, any unknown tags, and NPCs that still have no position.
+6. **Fine tune** by standing where things belong: `/lobby set spawn`, `/lobby set npc <id>`,
+   `/lobby set hologram <id>`, `/lobby set wall`, `/lobby pad`, `/lobby egg`, `/lobby button <action>`,
+   `/lobby parkour start|checkpoint|finish`. Or edit `plugins/PvPLobby/layout.yml` and run `/lobby reload`.
+
+Every import and regenerate keeps the previous `layout.yml` as `layout.yml.bak`. To keep a hand-built lobby in an
+existing world (for example your main world) without anything being pasted, set `world.mode: custom` and
+`world.name: <world>`; positions then come only from `layout.yml` and `/lobby set`.
+
 ---
 
 ## Project layout
@@ -380,8 +532,12 @@ are refused with an error in the console.
 ```
 pom.xml                  parent (modules: core, lobby, duels, ffa, dist; profile "smoke" adds smoke-test)
 core/  lobby/  duels/  ffa/   plugin sources, resources and tests
+lobby/.../gen            the procedural hub generator (tested and previewed without a server)
+lobby/.../world          lobby world, layout.yml store, schematic/world imports and sign tags
+lobby/.../feature        NPCs, portals and pads, parkour, eggs, leaderboard wall, particles, tips, cosmetics
 dist/                    copies the jars into server/plugins during package
 smoke-test/              MockBukkit end-to-end smoke tests (mvn -Psmoke verify)
 server/                  ready-to-run server folder (start scripts, tuned configs, plugin config defaults)
 docs/ARCHITECTURE.md     architecture and module layout
+docs/images/             lobby previews (regenerated by the lobby tests into lobby/target/previews)
 ```

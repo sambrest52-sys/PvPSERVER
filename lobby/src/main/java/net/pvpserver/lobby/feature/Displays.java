@@ -37,6 +37,8 @@ public final class Displays {
     private final Map<String, Component> current = new LinkedHashMap<>();
     private final Map<String, Component> pending = new LinkedHashMap<>();
     private final ArrayDeque<String> queue = new ArrayDeque<>();
+    private final java.util.Set<Long> tickets = new java.util.HashSet<>();
+    private World ticketWorld;
     private int cap = 120;
     private int perTick = 8;
     private int refused;
@@ -90,8 +92,40 @@ public final class Displays {
         return refused;
     }
 
+    /**
+     * Keeps the chunk at a location loaded. Lobby entities are non-persistent (so they never duplicate), which also
+     * means a server would discard them when their chunk unloads; a plugin ticket keeps those few chunks loaded.
+     *
+     * @param at entity location
+     */
+    public void ticket(Location at) {
+        int cx = at.getBlockX() >> 4;
+        int cz = at.getBlockZ() >> 4;
+        if (tickets.add(((long) cx << 32) ^ (cz & 0xFFFFFFFFL))) {
+            ticketWorld = at.getWorld();
+            ticketWorld.addPluginChunkTicket(cx, cz, plugin);
+        }
+    }
+
+    /** @return chunks kept loaded for lobby entities */
+    public int ticketCount() {
+        return tickets.size();
+    }
+
+    /** @return whether a spawned display was removed by something else (e.g. /kill) */
+    public boolean anyInvalid() {
+        return texts.values().stream().anyMatch(d -> !d.isValid()) || items.values().stream().anyMatch(d -> !d.isValid());
+    }
+
     /** Removes every lobby entity in the world (including leftovers from a crash). */
     public void clear(World world) {
+        if (ticketWorld != null && org.bukkit.Bukkit.getWorld(ticketWorld.getUID()) != null) {
+            for (long key : tickets) {
+                ticketWorld.removePluginChunkTicket((int) (key >> 32), (int) key, plugin);
+            }
+        }
+        tickets.clear();
+        ticketWorld = null;
         texts.values().forEach(Entity::remove);
         items.values().forEach(Entity::remove);
         texts.clear();
@@ -146,6 +180,7 @@ public final class Displays {
             refused++;
             return null;
         }
+        ticket(at);
         TextDisplay display = at.getWorld().spawn(at, TextDisplay.class, spawned -> {
             tag(spawned, "text");
             spawned.setBillboard(billboard);
@@ -186,6 +221,7 @@ public final class Displays {
             refused++;
             return null;
         }
+        ticket(at);
         ItemDisplay display = at.getWorld().spawn(at, ItemDisplay.class, spawned -> {
             tag(spawned, "item");
             spawned.setItemStack(item);

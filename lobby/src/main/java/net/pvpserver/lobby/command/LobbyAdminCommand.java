@@ -314,6 +314,7 @@ final class LobbyAdminCommand extends BaseCommand {
         LobbyLayout layout = layout();
         List<LobbyLayout.LaunchPad> pads = new ArrayList<>(layout.pads());
         BlockPos at = BlockPos.of(player.getLocation());
+        plate(player.getLocation().getBlock(), org.bukkit.Material.HEAVY_WEIGHTED_PRESSURE_PLATE);
         pads.removeIf(pad -> pad.at().equals(at));
         pads.add(new LobbyLayout.LaunchPad(at, round(direction.getX()), round(Math.max(0.6, power * 0.5)), round(direction.getZ())));
         save(layout.withTriggers(layout.portals(), pads, layout.buttons(), layout.parkour(), layout.eggs()));
@@ -409,9 +410,18 @@ final class LobbyAdminCommand extends BaseCommand {
         BlockPos finish = old == null ? null : old.finish();
         List<BlockPos> checkpoints = old == null ? new ArrayList<>() : new ArrayList<>(old.checkpoints());
         switch (action) {
-            case "start" -> start = at;
-            case "checkpoint" -> checkpoints.add(at);
-            case "finish" -> finish = at;
+            case "start" -> {
+                start = at;
+                plate(player.getLocation().getBlock(), org.bukkit.Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
+            }
+            case "checkpoint" -> {
+                checkpoints.add(at);
+                plate(player.getLocation().getBlock(), org.bukkit.Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
+            }
+            case "finish" -> {
+                finish = at;
+                plate(player.getLocation().getBlock(), org.bukkit.Material.HEAVY_WEIGHTED_PRESSURE_PLATE);
+            }
             case "clear" -> {
                 start = null;
                 finish = null;
@@ -435,6 +445,13 @@ final class LobbyAdminCommand extends BaseCommand {
         }
         save(layout.withTriggers(layout.portals(), layout.pads(), layout.buttons(), course, layout.eggs()));
         m().send(sender, "lobby.set-done", MessageService.p("what", "parkour " + action), MessageService.p("where", at.format()));
+    }
+
+    /** Marks a trigger spot with a pressure plate when it is empty, so players can see it. */
+    private static void plate(Block block, org.bukkit.Material plate) {
+        if (block.getType().isAir() && block.getRelative(0, -1, 0).getType().isSolid()) {
+            block.setType(plate, false);
+        }
     }
 
     private static double parse(String text, double fallback) {

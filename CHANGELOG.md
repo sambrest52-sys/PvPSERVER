@@ -1,5 +1,91 @@
 # Changelog
 
+## 1.2.0 - The lobby rebuild
+
+### A generated hub
+- The lobby now lives in its own void world, `pvp_lobby`, built from code on first start: a floating hub about
+  150 blocks across, behind an invisible barrier and a world border, with noon forever, no weather or mobs, and
+  peaceful difficulty.
+  - **Spawn plaza**: fountain with a quartz spire and water basins, a star mosaic in the zones' colours, a
+    crossed-swords medallion at spawn, quartz pillars with banners and lanterns, planters, benches and cherry trees.
+  - **Eight themed zone islands** joined by railed bridges:
+    - Ranked Hall: quartz rotunda, dome and beacon.
+    - Unranked Hall: prismarine temple with pools.
+    - FFA Gate: blackstone colosseum.
+    - Hall of Fame: leaderboard wall and podium.
+    - Cosmetics Shop.
+    - Info Pavilion: rules and links.
+    - Party Lounge: campfire, string lights, jukebox.
+    - Kit Workshop: anvils, forge, chimney.
+  - **Sky parkour**: 30 jumps and 3 checkpoints spiralling around a crystal spire, with launch pads up and down.
+  - A **skyline** of floating islands and crystal spires.
+- Same seed, same lobby: `world.seed` in `config.yml`. `/lobby regenerate [seed]` rebuilds it, clearing exactly
+  the blocks pasted before.
+
+### Interactive features
+- **NPCs** without any NPC plugin: player-shaped Mannequins with skins, armour, held items, glow and a live
+  hologram (queued and fighting counts per mode). Left or right click runs the NPC's action, and their heads follow
+  nearby players. Nine by default: Ranked, Unranked, FFA, Kit Editor, Stats, Leaderboards, Cosmetics, Party, Info.
+- **Portals**: walk into the Ranked or Unranked portal to open that queue, or into the FFA gate to join FFA
+  directly. Portals have particle curtains, a push-back and a cooldown.
+- **Launch pads**: velocities are solved against player physics, so each pad lands on its target.
+- **Clickable blocks** run actions: anvils and tables open the kit editor, lecterns show the rules, links and
+  leaderboards, the enchanting table opens cosmetics, and a bell starts a party fight.
+- **Parkour**: start, checkpoint and finish plates; action bar timer; falls return you to the last checkpoint.
+  Personal and server records, a best times hologram, reward commands, a parkour hotbar (checkpoint, restart,
+  leave) and no flying during a run.
+- **Ten hidden eggs**. Finding all of them grants permissions (by default the Emerald trail and the Totem join
+  effect) and can run reward commands.
+- **Leaderboard wall**: one panel per ranked kit plus a global one, cycling ELO, Wins and Best Win Streak. Panels
+  read the cached leaderboards, and kit icons spin above them.
+- **Ambience**: particle emitters (fountain spray, blossoms, sparkles, smoke, soul flames, notes), zone names in
+  the action bar, a rotating tips boss bar, timed chat announcements, and a welcome title with a sound.
+- **Lobby cosmetics**: 8 particle trails and 5 join effects in `/cosmetics` (new `trails` and `join-effects`
+  sections in `cosmetics.yml`).
+- Sidebar placeholders `<zone>`, `<parkour_time>`, `<parkour_best>`, `<eggs_found>`, `<eggs_total>` and a
+  `parkour` flag.
+
+### Custom lobbies
+- `/lobby import <file|folder>` loads a Sponge `.schem`, a legacy `.schematic` or a whole world folder from
+  `plugins/PvPLobby/imports/`. Signs such as `[spawn]`, `[npc ranked]`, `[portal ranked]`, `[pad]`,
+  `[parkour start]`, `[checkpoint 1]`, `[egg]`, `[button kit editor]`, `[zone ranked 15]`, `[particles fountain]`
+  and `[wall]` place everything; the signs are removed (plates, pads and eggs replace their own signs). An
+  imported lobby overrides the generated one until `/lobby regenerate`.
+- Positions live in `layout.yml` (edit and `/lobby reload`, or use `/lobby set spawn|npc|hologram|wall|zone`,
+  `/lobby pad`, `/lobby egg`, `/lobby button`, `/lobby parkour ...`, `/lobby remove ...`). Every rebuild keeps
+  the previous file as `layout.yml.bak`.
+- `world.mode: custom` keeps using an existing world as it is, without pasting anything.
+
+### Configuration and commands
+- New files: `layout.yml` (positions), `npcs.yml` (versioned: NPC looks, texts and actions), `data.yml`
+  (parkour times and eggs).
+- `config.yml` has new sections for the world, pads, portals, NPCs, parkour, eggs, the wall, ambient particles,
+  zones, the boss bar, announcements, the welcome title, lobby cosmetics and performance limits. Values are
+  validated: a bad value falls back to its default with a warning naming the key.
+- `/pvpadmin reload` and `/lobby reload` reload the lobby's settings, NPCs and layout and respawn its entities.
+- `/lobby` is now the lobby admin command. Players typing it still go to spawn; `/spawn`, `/hub` and `/l` are
+  unchanged.
+
+### Performance and protection
+- About 55 lobby entities in the default hub, non-persistent and tagged, with a hard cap.
+- Trigger lookups only run when a player crosses into another block.
+- Hologram counts are captured once per interval and rendered off the main thread; text updates are applied a
+  few per tick.
+- Ambient particles are spread across ticks and only sent to nearby players.
+- The lobby world blocks natural mob spawns, nether portals, and tampering with item frames, armour stands and
+  NPCs, on top of the existing damage, hunger, block and item protection.
+
+### Fixes and internals
+- The hotbar no longer fires its item's action when a click is used by something else (an NPC or a clickable
+  block).
+- The core leaderboard cache never runs two refreshes at once, and keeps the previous boards when a refresh fails.
+- The smoke test harness fails, instead of silently skipping, when a plugin hits a MockBukkit gap while booting.
+
+### Upgrading from 1.1.0
+- New players spawn in the generated `pvp_lobby` hub. Your old `spawn` setting is only used with
+  `world.mode: custom` (set `world.name` to your old lobby world to keep it).
+- The `/lobby` alias of `/spawn` became the lobby command; `/lobby` alone still teleports players to spawn.
+
 ## 1.1.0 - Kits and arenas overhaul
 
 ### Kits

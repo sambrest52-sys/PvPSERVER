@@ -12,6 +12,56 @@ lobby:
   fly-on: "<prefix><gray>Flight <success>enabled</success>."
   fly-off: "<prefix><gray>Flight <error>disabled</error>."
   fly-lobby-only: "<prefix><error>You can only fly in the lobby."
+  wrong-world: "<prefix><error>Go to the lobby world (<white><world></white>) first."
+  busy: "<prefix><error>The lobby is being rebuilt, try again in a moment."
+  reloaded: "<prefix><success>Lobby reloaded in <ms> ms <gray>(<white><entities></white> entities)."
+  reload-warning: "<prefix><gray>⚠ <yellow><warning>"
+  regenerating: "<prefix><gray>Rebuilding the lobby hub with seed <white><seed></white>... layout.yml is backed up first."
+  regenerated: "<prefix><success>Lobby hub rebuilt <gray>(seed <white><seed></white>, <ms> ms)."
+  regenerate-failed: "<prefix><error>Could not rebuild the lobby: <white><reason>"
+  imports-list: "<prefix><gray>Importable lobbies: <white><files>"
+  imports-empty: "<prefix><gray>Nothing to import. Put a .schem, .schematic or world folder in <white><folder></white>."
+  import:
+    not-found: "<prefix><error><white><file></white> is not in <white><folder></white>. <gray>(/lobby imports lists what is there)"
+    reading: "<prefix><gray>Importing <white><file></white>..."
+    failed: "<prefix><error>Import of <white><file></white> failed: <white><reason>"
+    done: "<prefix><success>Imported <white><file></white>. <gray>Fine tune with /lobby set, or /lobby regenerate to go back."
+    note: "<prefix><dark_gray>» <gray><note>"
+    missing-npcs: "<prefix><yellow>No position for NPCs: <white><npcs></white><yellow>. Stand where they belong and use /lobby set npc <id>."
+  info:
+    - "<prefix><primary><bold>Lobby</bold> <gray><world> <dark_gray>- <white><source>"
+    - "<gray>  Spawn <white><spawn></white> <dark_gray>|</dark_gray> NPCs <white><npcs></white> <dark_gray>|</dark_gray> Holograms <white><holograms></white> <dark_gray>|</dark_gray> Wall <white><wall></white> boards"
+    - "<gray>  Portals <white><portals></white> <dark_gray>|</dark_gray> Pads <white><pads></white> <dark_gray>|</dark_gray> Buttons <white><buttons></white> <dark_gray>|</dark_gray> Eggs <white><eggs></white> <dark_gray>|</dark_gray> Zones <white><zones></white> <dark_gray>|</dark_gray> Particles <white><emitters></white>"
+    - "<gray>  Parkour <white><parkour></white> (<white><runners></white> running) <dark_gray>|</dark_gray> Entities <white><entities></white>"
+  set-done: "<prefix><success>Set <white><what></white> <gray>at <white><where></white>."
+  removed: "<prefix><gray>Removed <white><what></white>."
+  not-found: "<prefix><error>Nothing to remove: <white><what></white>."
+  npc-undefined: "<prefix><yellow>There is no NPC <white><id></white> in npcs.yml yet; it shows up once you add it there."
+  progress-reset: "<prefix><gray>Reset the parkour time and eggs of <white><player></white>."
+  rules:
+    - ""
+    - "  <green><bold>SERVER RULES"
+    - "  <gray>1. <white>No cheats, macros or unfair mods."
+    - "  <gray>2. <white>No teaming in FFA, no boosting ELO."
+    - "  <gray>3. <white>Be respectful in chat."
+    - "  <gray>4. <white>No abusing bugs; report them to staff."
+    - "  <gray>Full rules: <primary><click:open_url:'https://yourserver.net/rules'>yourserver.net/rules</click>"
+    - ""
+  links:
+    - ""
+    - "  <primary><bold>LINKS"
+    - "  <gray>Discord: <primary><click:open_url:'https://discord.gg/yourserver'>discord.gg/yourserver</click>"
+    - "  <gray>Store: <primary><click:open_url:'https://store.yourserver.net'>store.yourserver.net</click>"
+    - "  <gray>Website: <primary><click:open_url:'https://yourserver.net'>yourserver.net</click>"
+    - ""
+  info-npc:
+    - ""
+    - "  <green><bold>WELCOME TO PRACTICE"
+    - "  <gray>Click an NPC or walk into a portal to queue. The <yellow>Kit Workshop</yellow> lets you"
+    - "  <gray>arrange every kit; the <gold>Hall of Fame</gold> shows the best players."
+    - "  <gray>Rules: <white>/rules</white> or the lectern in the Info Pavilion."
+    - "  <gray>Discord: <primary><click:open_url:'https://discord.gg/yourserver'>discord.gg/yourserver</click>"
+    - ""
 
 settings:
   enabled: "<prefix><white><setting></white> <success>enabled</success>."
@@ -34,6 +84,89 @@ kit-editor:
 leaderboard:
   empty: "<gray>No entries yet"
   line: "<accent>#<position></accent> <white><player></white> <dark_gray>-</dark_gray> <primary><value>"
+
+parkour:
+  none: "<prefix><error>This lobby has no parkour."
+  started: "<prefix><green>Parkour started! <gray>Reach all <white><checkpoints></white> checkpoints and the finish. Good luck!"
+  checkpoint: "<prefix><green>Checkpoint <white><checkpoint>/<total></white> <gray>at <white><time>"
+  checkpoint-skipped: "<red>You skipped checkpoint <white><checkpoint></white>!"
+  missed-checkpoints: "<red>You missed checkpoint <white><checkpoint></white>!"
+  first-finish: "<prefix><green><bold>Parkour complete!</bold> <gray>Your time: <white><time>"
+  personal-best: "<prefix><gold><bold>New personal best!</bold> <white><time></white> <gray>(<green>-<improvement></green>)"
+  finished: "<prefix><green>Finished in <white><time></white><gray>. Your best is <white><best></white>."
+  record: "<prefix><gold><bold>RECORD!</bold> <white><player></white> <gray>set a new parkour record: <gold><time>"
+  cancelled: "<prefix><gray>Parkour cancelled."
+  restarted: "<yellow>Back to the start!"
+  too-slow: "<prefix><gray>Your parkour run timed out."
+  no-flying: "<red>Stop flying to start the parkour."
+  timer: "<green>⏱ <white><time></white> <dark_gray>|</dark_gray> <gray>Checkpoint <white><checkpoint>/<total>"
+  board:
+    title: "<green><bold>SKY PARKOUR</bold>\n<gray>Fastest times"
+    line: "<accent>#<position></accent> <white><player></white> <dark_gray>-</dark_gray> <green><time>"
+    empty: "<gray>No times yet. Be the first!"
+    footer: "<dark_gray>Step on the plate to start"
+  top-header: "<prefix><green><bold>Parkour</bold> <gray>fastest times"
+  top-line: "<gray>  #<position> <white><player></white> <dark_gray>-</dark_gray> <green><time>"
+  top-empty: "<gray>  No times yet."
+
+eggs:
+  found: "<prefix><gold>You found an egg! <gray>(<white><found>/<total></white>)"
+  already-found: "<gray>You already found this egg <dark_gray>(<white><found>/<total></white>)"
+  all-found: "<prefix><gold><bold>You found every egg!</bold> <gray>Check the Cosmetics Shop for your reward."
+  all-found-title:
+    title: "<gold><bold>EGG HUNTER"
+    subtitle: "<gray>All <white><total></white> eggs found"
+
+wall:
+  global: "<primary>Global"
+  title: "<kit>\n<gray><stat>"
+  first: "<gold>#1 <white><player></white> <dark_gray>-</dark_gray> <gold><value>"
+  second: "<#C0C0C0>#2 <white><player></white> <dark_gray>-</dark_gray> <#C0C0C0><value>"
+  third: "<#CD7F32>#3 <white><player></white> <dark_gray>-</dark_gray> <#CD7F32><value>"
+  line: "<gray>#<position> <white><player></white> <dark_gray>-</dark_gray> <gray><value>"
+  empty: "<gray>No entries yet"
+  footer: "<dark_gray>Switches every <seconds>s"
+
+# Floating texts at the hologram positions in layout.yml (the parkour board is built from parkour.board).
+# Live placeholders: <online> <lobby> <queued> <fighting> <ffa> <spectating> <ranked_queued> <ranked_fighting>
+# <unranked_queued> <unranked_fighting> <parkour_runners>
+displays:
+  welcome:
+    - "<primary><bold>PRACTICE"
+    - "<gray>yourserver.net"
+    - "<white><online></white> <gray>online <dark_gray>|</dark_gray> <white><fighting></white> <gray>fighting"
+  ranked-portal:
+    - "<gold><bold>RANKED"
+    - "<white><ranked_queued></white> <gray>in queue"
+  unranked-portal:
+    - "<aqua><bold>UNRANKED"
+    - "<white><unranked_queued></white> <gray>in queue"
+  ffa-portal:
+    - "<red><bold>FREE FOR ALL"
+    - "<white><ffa></white> <gray>fighting <dark_gray>|</dark_gray> <gray>walk in to join"
+  hall-of-fame:
+    - "<gold><bold>HALL OF FAME"
+    - "<gray>The best players on the server"
+  cosmetics:
+    - "<light_purple><bold>COSMETICS SHOP"
+    - "<gray>Trails, join effects and more"
+  kit-editor:
+    - "<yellow><bold>KIT WORKSHOP"
+    - "<gray>Right-click an anvil to edit your kits"
+  party:
+    - "<light_purple><bold>PARTY LOUNGE"
+    - "<gray>Ring the bell for a party fight"
+  rules:
+    - "<green><bold>RULES"
+    - "<white>No cheats or macros"
+    - "<white>No teaming in FFA"
+    - "<white>Respect other players"
+    - "<gray>Click the lectern for more"
+  links:
+    - "<primary><bold>DISCORD & STORE"
+    - "<white>discord.gg/yourserver"
+    - "<white>store.yourserver.net"
+    - "<gray>Click the lectern for links"
 
 hologram:
   title: "<kit> <gray><stat> Leaderboard"

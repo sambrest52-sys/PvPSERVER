@@ -25,6 +25,11 @@ server/world_the_end/
 server/pvp_arenas/
 server/pvp_ffa/
 server/pvp_editor/
+server/pvp_lobby/
+server/import_*/
+server/plugins/PvPLobby/layout.yml
+server/plugins/PvPLobby/layout.yml.bak
+server/plugins/PvPLobby/data.yml
 server/usercache.json
 server/usercache.json.*
 server/banned-*.json

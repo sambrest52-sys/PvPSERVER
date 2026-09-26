@@ -94,6 +94,48 @@ Choices made while building this project without stopping to ask, with the reaso
   before saving. There is also a one-step `save` flag. Marker signs reuse what map builders already place. Legacy
   `.schematic` files use Paper's own legacy tables instead of a hand-made id table.
 
+## Lobby (1.2)
+
+* **The lobby gets its own void world (`pvp_lobby`).** Pasting a hub into the main world could destroy someone's
+  build, and a dedicated world makes the border, fixed time, peaceful difficulty and "no mobs" rules safe to apply.
+  A marker file (`pvplobby.yml`) in the world folder records what built it. A world that exists without the
+  marker is used as it is, with a warning, and never pasted over. `world.mode: custom` keeps any world (for example
+  the main world) untouched.
+* **The hub is generated, not shipped as a schematic.** It reuses the arena generator's canvas: the same
+  deterministic seed, block-state validation and preview renderer. So it is unit-tested without a server (safe
+  spawn, NPC and hologram spots, walkable portals, contained water, valid block states, pads that land, parkour
+  jumps within sprint-jump reach) and adds nothing binary to the repository.
+* **Positions live in `layout.yml`, looks and behaviour in `npcs.yml` and `config.yml`.** The generator and the
+  importer write `layout.yml` (backing up the old one), admins edit it or use `/lobby set`, and `/lobby reload`
+  applies it. The same layout model serves the generated hub, schematic imports and world imports.
+* **Rebuilds clear exactly what was pasted.** The pasted template is saved next to the marker, and a regenerate or
+  import clears those blocks with the tick-budgeted paster before pasting the new ones. Clearing a whole 200x100x200
+  box would check four million blocks. The first build is pasted synchronously on startup, before anyone can join
+  (about 146k blocks, roughly half a second).
+* **NPCs are Paper Mannequins**, player-shaped entities with profiles, equipment and poses, plus a text display.
+  This avoids Citizens and packet-level fake players, survives restarts by respawning (entities are
+  non-persistent and tagged), and costs two entities per NPC. Clicks come from `PlayerInteractEntityEvent` and
+  `PrePlayerAttackEntityEvent`, so both mouse buttons work.
+* **Sign tags for imports** (`[npc ranked]`, `[portal ranked]`, `[parkour start]`...) because builders already
+  place signs, and WorldEdit keeps them in schematics. Arena marker signs (`[A]`, `[B]`) keep their meaning for
+  arena imports; the lobby importer ignores signs the schematic reader already removed.
+* **Launch pad velocities are solved, not tuned by hand.** `LaunchMath` simulates the player's airborne drag and
+  gravity to find the lowest arc that reaches the target, and a unit test flies every pad to check it lands on
+  solid ground inside the barrier. Imported pads (`[pad 3]`) use a simple forward-and-up push instead.
+* **Parkour times and found eggs are kept in `data.yml`**, not the SQL database: they are small and lobby-only,
+  and a YAML file keeps the storage schema unchanged. It is written in the background at most every 5 s and on
+  shutdown. A network running several lobbies would move this to SQL (see TODO).
+* **Live holograms: snapshot on the main thread, render off it.** Queue and match counts come from bridges that
+  are not thread-safe, so they are read once per interval on the main thread (a few map lookups). MiniMessage
+  parsing and text building happen asynchronously. Only changed texts are queued and applied a few per tick.
+* **Hidden eggs are dragon and turtle eggs.** Sniffer eggs schedule a hatch tick when placed, turtle eggs only
+  hatch on sand, and dragon eggs only teleport when clicked (clicks are cancelled). The eggs cannot disappear.
+* **`/lobby` became the lobby admin command.** For players it still teleports to spawn, so muscle memory keeps
+  working; `/hub` and `/l` stay as aliases of `/spawn`.
+* **A config.yml from 1.1 reads the new sections from the bundled defaults.** Bukkit getters that take an explicit
+  fallback ignore the defaults of a merged file. The lobby settings reader avoids them, and a unit test loads an old
+  file on top of the defaults.
+
 ## Data
 
 * **Profiles load in `AsyncPlayerPreLoginEvent`**, which Paper already runs off the main thread. This is the only
@@ -162,3 +204,8 @@ Choices made while building this project without stopping to ask, with the reaso
   * the ghost-block fix throwing when another plugin fires a `BlockPlaceEvent` with no clicked block
 * New arenas created with `/arena create` start with the `standard` tag, so they work for most kits right away.
   Use `/arena tag remove standard` for special arenas such as sumo rings.
+* **The lobby scenarios move players the way Paper does.** MockBukkit places the player at the destination
+  *before* firing `PlayerMoveEvent` and ignores `setTo`. The lobby redirects falls with `setTo`, as Paper expects,
+  and the harness's `move()` applies the event's final destination, as Paper does. MockBukkit's
+  `UnimplementedOperationException` is a JUnit "aborted" exception; the harness now turns it into a failure during
+  setup as well, after it silently skipped a whole test class.

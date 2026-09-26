@@ -72,6 +72,7 @@ public final class NpcService implements Listener {
                 continue;
             }
             Location at = point.at(world);
+            displays.ticket(at);
             Mannequin body = world.spawn(at, Mannequin.class, npc -> dress(npc, definition));
             bodies.put(definition.id(), body);
             byEntity.put(body.getUniqueId(), definition.id());
@@ -158,6 +159,11 @@ public final class NpcService implements Listener {
                 body.setRotation(yaw, pitch);
             }
         }
+    }
+
+    /** @return whether an NPC body was removed by something else (e.g. /kill) */
+    public boolean anyInvalid() {
+        return bodies.values().stream().anyMatch(body -> !body.isValid());
     }
 
     /** Removes NPC bodies (their text displays go with {@link Displays#clear}). */

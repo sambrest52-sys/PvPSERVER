@@ -467,6 +467,15 @@ class LobbyScenariosTest extends SmokeTestBase {
         assertEquals(spot.getX(), npc("ranked").getLocation().getX(), 0.11);
         assertEquals(9, lobbyWorld().getEntitiesByClass(Mannequin.class).size(), "no duplicate NPCs");
 
+        // Pads and eggs can be added in game; the pad gets a visible plate.
+        int pads = layout().getMapList("launch-pads").size();
+        admin.teleport(spot.clone().add(0, 0, 2));
+        assertTrue(run(admin, "lobby pad 2"));
+        assertEquals(pads + 1, layout().getMapList("launch-pads").size(), "pad saved to layout.yml");
+        assertEquals(Material.HEAVY_WEIGHTED_PRESSURE_PLATE, admin.getLocation().getBlock().getType(), "pad plate placed");
+        assertTrue(run(admin, "lobby remove pad"));
+        assertEquals(pads, layout().getMapList("launch-pads").size(), "nearest pad removed");
+
         // Edit npcs.yml and reload: the hologram text changes.
         File npcs = new File(lobby.getDataFolder(), "npcs.yml");
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(npcs);
@@ -477,6 +486,18 @@ class LobbyScenariosTest extends SmokeTestBase {
         assertTrue(drain(admin).stream().anyMatch(m -> m.contains("Lobby reloaded")));
         Location plate = npc("ranked").getLocation().add(0, 2.05, 0);
         await("reloaded NPC text", () -> plain(displayNear(plate).text()).contains("COMPETITIVE"), 3000);
+
+        // Something else removing an NPC (/kill) is noticed and repaired.
+        npc("stats").remove();
+        await("the watchdog respawns removed NPCs", () -> lobbyWorld().getEntitiesByClass(Mannequin.class).stream()
+                .filter(Mannequin::isValid).count() == 9, 5000);
+
+        // /pvpadmin reload reloads the lobby too.
+        drain(admin);
+        assertTrue(run(admin, "pvpadmin reload"));
+        ticks(5);
+        assertTrue(drain(admin).stream().noneMatch(m -> m.toLowerCase().contains("error")), "reload without errors");
+        assertEquals(9, lobbyWorld().getEntitiesByClass(Mannequin.class).size(), "NPCs respawned once after /pvpadmin reload");
 
         // Regenerate with another seed: the world is rebuilt, layout.yml is backed up and everything respawns.
         File folder = new File(server.getWorldContainer(), LOBBY);
@@ -592,5 +613,51 @@ class LobbyScenariosTest extends SmokeTestBase {
         awaitMessage(admin, "Lobby hub rebuilt", 20000);
         assertEquals(9, lobbyWorld().getEntitiesByClass(Mannequin.class).size());
         assertEquals("generated", YamlConfiguration.loadConfiguration(new File(folder, "pvplobby.yml")).getString("source"));
+    }
+
+    @Test
+    void importedWorldFolderReplacesTheLobbyWorld() throws Exception {
+        PlayerMock admin = join("WorldImporter");
+        admin.setOp(true);
+        File source = new File(new File(lobby.getDataFolder(), "imports"), "MyLobbyWorld");
+        new File(source, "region").mkdirs();
+        Files.writeString(new File(source, "level.dat").toPath(), "not really nbt; the mock only copies it");
+        Files.writeString(new File(source, "uid.dat").toPath(), "copies must get their own uid");
+        await("pasted blocks saved", () -> new File(new File(server.getWorldContainer(), LOBBY), "pvplobby.template").exists(), 5000);
+
+        drain(admin);
+        assertTrue(run(admin, "lobby import MyLobbyWorld"));
+        awaitMessage(admin, "Imported MyLobbyWorld", 20000);
+        File copy = new File(server.getWorldContainer(), LOBBY);
+        assertTrue(new File(copy, "level.dat").exists(), "world folder copied into the server");
+        assertFalse(new File(copy, "uid.dat").exists(), "the copy gets a fresh world UUID");
+        assertEquals("world", YamlConfiguration.loadConfiguration(new File(copy, "pvplobby.yml")).getString("source"));
+        assertEquals(LOBBY, admin.getWorld().getName(), "players are back in the (new) lobby world");
+        assertTrue(lobbyWorld().getEntitiesByClass(Mannequin.class).isEmpty(), "no NPC positions in an untagged world");
+        assertTrue(layout().contains("spawn"));
+        // Another player joining lands in the imported world.
+        PlayerMock late = join("LateJoiner");
+        assertEquals(LOBBY, late.getWorld().getName());
+    }
+
+    @Test
+    void lobbyCosmeticsCanBeChosen() throws Exception {
+        PlayerMock player = join("Stylish");
+        assertTrue(run(player, "cosmetics"));
+        clickSlot(player, 14);
+        assertTrue(menu(player).contains("Lobby Trails"), menu(player));
+        drain(player);
+        clickItem(player, Material.WHITE_WOOL);
+        assertTrue(drain(player).stream().anyMatch(m -> m.contains("Selected") && m.contains("Cloud")), "free trail selected");
+        player.closeInventory();
+        // Walking around with a trail on is harmless (particles are client side).
+        Location here = player.getLocation();
+        for (int i = 1; i <= 5; i++) {
+            move(player, here.clone().add(i, 0, 0));
+            ticks(3);
+        }
+        assertTrue(run(player, "cosmetics"));
+        clickSlot(player, 16);
+        assertTrue(menu(player).contains("Join Effects"), menu(player));
     }
 }

@@ -15,4 +15,4 @@ permissions:
   pvp.command.stats: {default: true}
   pvp.lobby.fly: {default: op, description: Use /fly in the lobby}
   pvp.lobby.build: {default: op, description: Build in the lobby while in creative mode}
-  pvp.admin.lobby: {default: op, description: Set the spawn and manage holograms}
+  pvp.admin.lobby: {default: op, description: "Rebuild, import and edit the lobby (/lobby, /setspawn, /lbholo)"}

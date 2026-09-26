@@ -151,6 +151,11 @@ public final class LobbyFeatures {
     private void second() {
         wall.tick();
         announcements.tick();
+        // Watchdog: something removed a lobby entity (/kill, another plugin); put everything back.
+        if (ticks % 200 < 20 && !plugin.lobbyWorld().rebuilding() && (npcs.anyInvalid() || displays.anyInvalid())) {
+            plugin.getLogger().info("Lobby entities were removed by something else; respawning them");
+            spawnAll();
+        }
         if (ticks % 60 < 20) {
             spin += (float) Math.PI;
             displays.spinItems(spin, 60);

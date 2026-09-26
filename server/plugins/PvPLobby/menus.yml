@@ -8,6 +8,8 @@ titles:
   cosmetics-kill-effects: "<dark_gray>Kill Effects"
   cosmetics-death-animations: "<dark_gray>Death Animations"
   cosmetics-join-messages: "<dark_gray>Join Messages"
+  cosmetics-trails: "<dark_gray>Lobby Trails"
+  cosmetics-join-effects: "<dark_gray>Join Effects"
   stats: "<dark_gray><player>'s Stats"
   leaderboards: "<dark_gray>Leaderboards: <stat>"
   kit-editor: "<dark_gray>Kit Editor"
@@ -32,6 +34,8 @@ items:
     kill-effects: {material: DIAMOND_SWORD, name: "<accent>Kill Effects", lore: ["<gray>Played where you kill someone."]}
     death-animations: {material: SKELETON_SKULL, name: "<accent>Death Animations", lore: ["<gray>Played where you die."]}
     join-messages: {material: OAK_SIGN, name: "<accent>Join Messages", lore: ["<gray>Announced when you join."]}
+    trails: {material: BLAZE_POWDER, name: "<accent>Lobby Trails", lore: ["<gray>Particles behind you", "<gray>while you walk the lobby."]}
+    join-effects: {material: FIREWORK_ROCKET, name: "<accent>Join Effects", lore: ["<gray>Played around you when", "<gray>you arrive in the lobby."]}
     none: {material: BARRIER, name: "<error>None"}
   kit-editor:
     save: {material: LIME_DYE, name: "<success><bold>Save layout"}

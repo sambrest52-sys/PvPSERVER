@@ -33,6 +33,16 @@
 - [ ] Map voting for duels, and arena rotation weights.
 - [ ] Replays of the last N matches for staff review.
 
+## Lobby
+
+- [ ] Lobby pets (the cosmetics framework has room for a `pets` type; they would be client-side display entities).
+- [ ] Store parkour times and found eggs in SQL so several lobby servers share them.
+- [ ] More hub themes for the generator (winter, desert, nether) selectable with `world.theme`, and seasonal
+      decorations.
+- [ ] A lobby selector (several lobby instances) once the Velocity network exists.
+- [ ] Per-zone ambient music via note block songs or a resource pack.
+- [ ] A second parkour difficulty and a daily parkour challenge with rewards.
+
 ## Presentation
 
 - [ ] Nametag prefixes (rank colours above heads) using per-viewer scoreboard teams alongside the sidebar.
