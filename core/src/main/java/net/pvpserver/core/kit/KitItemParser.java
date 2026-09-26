@@ -10,6 +10,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -22,7 +23,8 @@ import java.util.logging.Logger;
 
 /**
  * Parses kit items and effects from YAML. Item sections support:
- * {@code material, amount, name, lore, enchants (list of "key:level"), unbreakable, potion, color, glow, tag}.
+ * {@code material, amount, name, lore, enchants (list of "key:level"), unbreakable, potion, effects (custom potion
+ * effects, "type:amplifier:seconds"), color, glow, tag}.
  */
 public final class KitItemParser {
 
@@ -99,6 +101,22 @@ public final class KitItemParser {
             } else {
                 builder.potion(type);
             }
+        }
+        Object potionEffects = map.get("effects");
+        if (potionEffects instanceof List<?> list && !list.isEmpty()) {
+            List<PotionEffect> custom = parseEffects(kitId, list.stream().map(String::valueOf).toList());
+            builder.meta(meta -> {
+                if (meta instanceof PotionMeta potionMeta) {
+                    for (PotionEffect effect : custom) {
+                        potionMeta.addCustomEffect(effect.withParticles(true).withIcon(true), true);
+                    }
+                    if (!potionMeta.hasColor() && !custom.isEmpty()) {
+                        potionMeta.setColor(custom.get(0).getType().getColor());
+                    }
+                } else {
+                    logger.warning("Kit " + kitId + ": 'effects' only applies to potions (" + material + ")");
+                }
+            });
         }
         Object color = map.get("color");
         if (color != null) {

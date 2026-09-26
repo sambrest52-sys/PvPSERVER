@@ -113,12 +113,14 @@ public final class ArenaEditor implements Listener {
             return;
         }
         World world = editorWorld();
-        int index = Math.abs(arena.name().hashCode() % 64);
-        int ox = index * 512;
+        int[] slot = editorSlot(arena.name(), template);
+        int ox = slot[0] * 512;
         int oy = 64;
         int oz = 0;
         messages.send(player, "arena.pasting", MessageService.p("arena", arena.name()));
-        arenas.paster().paste(template, world, ox, oy, oz).thenRun(() -> Tasks.sync(() -> {
+        // Clear what the previous edit of this arena left in its slot (the editor world persists), then paste.
+        arenas.paster().clearBox(world, ox, oy, oz, slot[1], slot[2], slot[3])
+                .thenCompose(v -> arenas.paster().paste(template, world, ox, oy, oz)).thenRun(() -> Tasks.sync(() -> {
             ArenaEditSession session = new ArenaEditSession(arena.name());
             session.pos1 = new Location(world, ox, oy, oz);
             session.pos2 = new Location(world, ox + template.sizeX() - 1, oy + template.sizeY() - 1, oz + template.sizeZ() - 1);
@@ -130,6 +132,7 @@ public final class ArenaEditor implements Listener {
             session.buildLimitY = oy + arena.buildLimit();
             session.voidY = oy + arena.voidY();
             session.goalRadius = arena.goalRadius();
+            session.buildArea = arena.buildArea();
             session.displayName = arena.displayName();
             session.icon = arena.icon();
             session.tags = new HashSet<>(arena.tags());
@@ -140,6 +143,36 @@ public final class ArenaEditor implements Listener {
             player.teleport(tp);
             messages.send(player, "arena.editing", MessageService.p("arena", arena.name()));
         }));
+    }
+
+    /**
+     * Returns the editor-world slot of an arena and the size of what was pasted there last time, then records the new
+     * size. Slots are stable per arena name (stored in {@code arenas/editor-slots.yml}) so edits never overlap.
+     *
+     * @return {slot, previous sizeX, previous sizeY, previous sizeZ}
+     */
+    private int[] editorSlot(String name, ArenaTemplate template) {
+        java.io.File file = new java.io.File(plugin.getDataFolder(), "arenas/editor-slots.yml");
+        org.bukkit.configuration.file.YamlConfiguration slots = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(file);
+        int slot;
+        int[] previous = {0, 0, 0};
+        if (slots.isConfigurationSection("slots." + name)) {
+            slot = slots.getInt("slots." + name + ".index");
+            previous = new int[]{slots.getInt("slots." + name + ".x"), slots.getInt("slots." + name + ".y"), slots.getInt("slots." + name + ".z")};
+        } else {
+            slot = slots.getInt("next", 0);
+            slots.set("next", slot + 1);
+        }
+        slots.set("slots." + name + ".index", slot);
+        slots.set("slots." + name + ".x", template.sizeX());
+        slots.set("slots." + name + ".y", template.sizeY());
+        slots.set("slots." + name + ".z", template.sizeZ());
+        try {
+            slots.save(file);
+        } catch (java.io.IOException e) {
+            plugin.getLogger().warning("Could not save " + file + ": " + e.getMessage());
+        }
+        return new int[]{slot, previous[0], previous[1], previous[2]};
     }
 
     /**
@@ -170,6 +203,11 @@ public final class ArenaEditor implements Listener {
         int minX = region.minX();
         int minY = region.minY();
         int minZ = region.minZ();
+        if (session.buildArea1 != null && session.buildArea2 != null) {
+            session.buildArea = RelativeBox.of(session.buildArea1.getBlockX() - minX, session.buildArea1.getBlockY() - minY,
+                    session.buildArea1.getBlockZ() - minZ, session.buildArea2.getBlockX() - minX,
+                    session.buildArea2.getBlockY() - minY, session.buildArea2.getBlockZ() - minZ);
+        }
         Arena arena = new Arena(session.name, session.displayName, session.icon, session.enabled, Set.copyOf(session.tags),
                 RelativePosition.of(session.spawnA, minX, minY, minZ), RelativePosition.of(session.spawnB, minX, minY, minZ),
                 session.spectator == null ? null : RelativePosition.of(session.spectator, minX, minY, minZ),
@@ -177,7 +215,7 @@ public final class ArenaEditor implements Listener {
                 (session.voidY == null ? minY - 6 : session.voidY) - minY,
                 session.goalA == null ? null : RelativePosition.of(session.goalA, minX, minY, minZ),
                 session.goalB == null ? null : RelativePosition.of(session.goalB, minX, minY, minZ),
-                session.goalRadius);
+                session.goalRadius, session.buildArea);
         messages.send(player, "arena.saving", MessageService.p("arena", session.name), MessageService.p("volume", region.volume()));
         capture(world, region)
                 .thenCompose(template -> arenas.save(arena, template))

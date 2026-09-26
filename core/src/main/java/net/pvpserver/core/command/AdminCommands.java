@@ -125,6 +125,16 @@ public final class AdminCommands {
                     m.send(s, "admin.stats-reset", MessageService.p("player", a[0]), MessageService.p("kit", kit == null ? "all kits" : kit));
                 }));
             }, (s, a) -> a.length == 1 ? Suggest.players(s) : a.length == 2 ? new ArrayList<>(api.kits().ids()) : List.of()));
+            sub(new Sub("kit", "pvp.admin.kits", "kit <kit> [player]", "Give a kit's items for inspection (/spawn resets)", false, 1, (s, a) -> {
+                Kit kit = api.kits().get(a[0]).orElse(null);
+                Player target = a.length > 1 ? Bukkit.getPlayerExact(a[1]) : s instanceof Player p ? p : null;
+                if (kit == null || target == null) {
+                    m.send(s, "admin.invalid-target");
+                    return;
+                }
+                api.kits().giveKit(target, kit);
+                m.send(s, "admin.kit-given", MessageService.c("kit", kit.name()), MessageService.p("player", target.getName()));
+            }, (s, a) -> a.length == 1 ? new ArrayList<>(api.kits().ids()) : a.length == 2 ? Suggest.players(s) : List.of()));
             sub(new Sub("leaderboards", "pvp.admin", "leaderboards", "Refresh leaderboards now", false, 0, (s, a) -> {
                 api.leaderboards().refresh().whenComplete((v, e) -> Tasks.sync(() -> m.send(s, "admin.leaderboards-refreshed")));
             }, null));

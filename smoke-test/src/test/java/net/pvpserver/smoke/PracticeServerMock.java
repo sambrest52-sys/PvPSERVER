@@ -61,6 +61,25 @@ class PracticeServerMock extends ServerMock {
         }
     }
 
+    /**
+     * MockBukkit's block-state parser cannot apply some valid 1.21 properties (lantern {@code hanging}, chain
+     * {@code axis}, snow {@code layers}, wall/pane/bars connections) that Paper's vanilla parser accepts. For a block
+     * id that exists, fall back to its default state; unknown ids still fail. The generator's unit tests validate
+     * every property against a schema, so nothing real is hidden.
+     */
+    @Override
+    public org.bukkit.block.data.BlockData createBlockData(String data) {
+        try {
+            return super.createBlockData(data);
+        } catch (IllegalArgumentException e) {
+            int bracket = data.indexOf('[');
+            if (bracket > 0 && org.bukkit.Material.matchMaterial(data.substring(0, bracket)) != null) {
+                return super.createBlockData(data.substring(0, bracket));
+            }
+            throw e;
+        }
+    }
+
     @Override
     public double[] getTPS() {
         return new double[]{20.0, 20.0, 20.0};

@@ -149,6 +149,19 @@ abstract class SmokeTestBase {
         await("players back in the lobby", () -> in("world", players), 8000);
     }
 
+    /** Joins an FFA arena, retrying while FFA is still pasting its arenas after startup. */
+    protected void joinFfa(PlayerMock player, String arena) throws InterruptedException {
+        await(player.getName() + " joins FFA " + arena, () -> {
+            if (!in("pvp_ffa", player)) {
+                run(player, "ffa " + arena);
+                for (int i = 0; i < 10; i++) {
+                    server.getScheduler().performOneTick();
+                }
+            }
+            return in("pvp_ffa", player);
+        }, 10000);
+    }
+
     /** Clicks the first slot of the open top inventory holding {@code material}, then lets the menu action run. */
     protected void clickItem(PlayerMock player, Material material) throws InterruptedException {
         Inventory top = player.getOpenInventory().getTopInventory();

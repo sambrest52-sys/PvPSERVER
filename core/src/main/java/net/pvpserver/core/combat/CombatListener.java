@@ -19,6 +19,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -27,13 +28,16 @@ import org.bukkit.entity.ThrownPotion;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -311,6 +315,71 @@ public final class CombatListener implements Listener {
                 }
             }, 1L);
         }
+    }
+
+    /**
+     * Soup kits: right-clicking a mushroom stew heals instantly and removes it (no eating animation, no bowl).
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onSoup(PlayerInteractEvent event) {
+        if (event.getHand() == null || (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK)) {
+            return;
+        }
+        ItemStack item = event.getItem();
+        if (item == null || item.getType() != Material.MUSHROOM_STEW) {
+            return;
+        }
+        Player player = event.getPlayer();
+        Kit kit = combat.activeKit(player);
+        if (kit == null || !kit.rules().soup()) {
+            return;
+        }
+        event.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
+        event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
+        AttributeInstance max = player.getAttribute(Attribute.MAX_HEALTH);
+        double maxHealth = max == null ? 20 : max.getValue();
+        if (player.getHealth() >= maxHealth || player.isDead()) {
+            return;
+        }
+        player.setHealth(Math.min(maxHealth, player.getHealth() + kit.rules().soupHeal()));
+        player.getInventory().setItem(event.getHand(), null);
+        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_GENERIC_DRINK, 0.6f, 1.4f);
+    }
+
+    /**
+     * Arrow regeneration kits: shot arrows cannot be picked up and a replacement is given after the delay.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onShoot(EntityShootBowEvent event) {
+        if (!(event.getEntity() instanceof Player player) || !(event.getProjectile() instanceof AbstractArrow arrow)) {
+            return;
+        }
+        Kit kit = combat.activeKit(player);
+        if (kit == null || kit.rules().arrowRegen() <= 0) {
+            return;
+        }
+        arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+        int kitArrows = 0;
+        for (ItemStack item : kit.contents()) {
+            if (item != null && item.getType() == Material.ARROW) {
+                kitArrows += item.getAmount();
+            }
+        }
+        int limit = kitArrows;
+        Tasks.later(() -> {
+            if (!player.isOnline() || combat.activeKit(player) != kit || limit <= 0) {
+                return;
+            }
+            int held = 0;
+            for (ItemStack item : player.getInventory().getContents()) {
+                if (item != null && item.getType() == Material.ARROW) {
+                    held += item.getAmount();
+                }
+            }
+            if (held < limit) {
+                player.getInventory().addItem(new ItemStack(Material.ARROW));
+            }
+        }, Math.max(1L, Math.round(kit.rules().arrowRegen() * 20)));
     }
 
     @EventHandler(ignoreCancelled = true)

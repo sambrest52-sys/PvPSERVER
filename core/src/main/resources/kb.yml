@@ -7,6 +7,9 @@
 # vertical-limit                 cap on the resulting upward velocity
 # air-horizontal-multiplier      scales horizontal knockback while the victim is airborne
 
+# Versioned: when an update ships a newer config-version, your copy is kept as kb.yml.v<old>.bak and replaced.
+config-version: 2
+
 enabled: true
 default-profile: default
 
@@ -19,14 +22,16 @@ profiles:
     extra-vertical: 0.085
     vertical-limit: 0.40
     air-horizontal-multiplier: 1.0
+  # Combo: little horizontal push and a strong upward pop keep the victim close and airborne (juggling),
+  # tuned for the combo kit's 0 hit delay.
   combo:
-    horizontal: 0.30
-    vertical: 0.25
-    friction: 2.5
-    extra-horizontal: 0.20
-    extra-vertical: 0.03
-    vertical-limit: 0.30
-    air-horizontal-multiplier: 0.9
+    horizontal: 0.28
+    vertical: 0.44
+    friction: 2.0
+    extra-horizontal: 0.22
+    extra-vertical: 0.06
+    vertical-limit: 0.52
+    air-horizontal-multiplier: 0.85
   sumo:
     horizontal: 0.42
     vertical: 0.34

@@ -117,6 +117,42 @@ public final class ArenaCommand extends BaseCommand {
             }
         }));
         sub(new Sub("tp", "tp <arena>", "Teleport to a free copy of an arena", true, 1, (s, a) -> teleport((Player) s, a[0])));
+        sub(new Sub("buildarea", "buildarea <1|2|clear>", "Limit block placing to a box (corners at your feet)", true, 1, (s, a) -> session(s, se -> {
+            Player player = (Player) s;
+            switch (a[0].toLowerCase(java.util.Locale.ROOT)) {
+                case "1" -> {
+                    se.buildArea1 = player.getLocation().getBlock().getLocation();
+                    messages.send(s, "arena.build-area-set", MessageService.p("corner", "1"), MessageService.p("location", ArenaEditor.format(se.buildArea1)));
+                }
+                case "2" -> {
+                    se.buildArea2 = player.getLocation().getBlock().getLocation();
+                    messages.send(s, "arena.build-area-set", MessageService.p("corner", "2"), MessageService.p("location", ArenaEditor.format(se.buildArea2)));
+                }
+                case "clear" -> {
+                    se.buildArea = null;
+                    se.buildArea1 = null;
+                    se.buildArea2 = null;
+                    messages.send(s, "arena.build-area-cleared");
+                }
+                default -> usageOf(s, "buildarea <1|2|clear>");
+            }
+        })));
+        sub(new Sub("generate", "generate <arena|all>", "Regenerate built-in arenas from code", false, 1, (s, a) -> {
+            java.util.Set<String> builtins = net.pvpserver.core.arena.gen.BuiltinArenas.names();
+            List<String> names = a[0].equalsIgnoreCase("all") ? List.of() : List.of(a[0].toLowerCase(java.util.Locale.ROOT));
+            if (!names.isEmpty() && !builtins.contains(names.get(0))) {
+                messages.send(s, "arena.unknown-builtin", MessageService.p("arena", a[0]), MessageService.p("list", String.join(", ", builtins)));
+                return;
+            }
+            messages.send(s, "arena.generating", MessageService.p("count", names.isEmpty() ? builtins.size() : 1));
+            arenas.regenerateBuiltins(names).whenComplete((done, error) -> Tasks.sync(() -> {
+                if (error != null) {
+                    messages.send(s, "arena.save-failed");
+                    return;
+                }
+                messages.send(s, "arena.generated", MessageService.p("arenas", String.join(", ", done)));
+            }));
+        }));
     }
 
     private void list(CommandSender sender) {
@@ -141,7 +177,8 @@ public final class ArenaCommand extends BaseCommand {
                 MessageService.p("size", template == null ? "?" : template.sizeX() + "x" + template.sizeY() + "x" + template.sizeZ()),
                 MessageService.p("build_limit", arena.buildLimit()), MessageService.p("void_y", arena.voidY()),
                 MessageService.p("enabled", arena.enabled()),
-                MessageService.p("goals", arena.goalA() != null && arena.goalB() != null ? "yes" : "no"));
+                MessageService.p("goals", arena.goalA() != null && arena.goalB() != null ? "yes" : "no"),
+                MessageService.p("build_area", arena.buildArea() == null ? "whole arena" : arena.buildArea().serialize()));
     }
 
     private void status(CommandSender sender) {
@@ -224,7 +261,13 @@ public final class ArenaCommand extends BaseCommand {
                 case "info", "edit", "enable", "disable", "delete", "tp" -> arenas.arenas().stream().map(Arena::name).toList();
                 case "setspawn" -> List.of("a", "b", "spectator");
                 case "setgoal" -> List.of("a", "b");
-                case "tag" -> args.length == 1 ? List.of("add", "remove") : List.of("standard", "build", "sumo", "bridge");
+                case "tag" -> args.length == 1 ? List.of("add", "remove") : List.of("standard", "build", "sumo", "boxing", "bridge", "spleef");
+                case "buildarea" -> List.of("1", "2", "clear");
+                case "generate" -> {
+                    List<String> names = new java.util.ArrayList<>(net.pvpserver.core.arena.gen.BuiltinArenas.names());
+                    names.add(0, "all");
+                    yield names;
+                }
                 default -> List.of();
             };
         }

@@ -20,10 +20,11 @@ import java.util.Set;
  * @param goalA goal of team A (bridge), nullable
  * @param goalB goal of team B (bridge), nullable
  * @param goalRadius horizontal goal radius
+ * @param buildArea where blocks may be placed (relative box), or null for the whole footprint below the build limit
  */
 public record Arena(String name, String displayName, Material icon, boolean enabled, Set<String> tags,
                     RelativePosition spawnA, RelativePosition spawnB, RelativePosition spectator, int buildLimit,
-                    int voidY, RelativePosition goalA, RelativePosition goalB, double goalRadius) {
+                    int voidY, RelativePosition goalA, RelativePosition goalB, double goalRadius, RelativeBox buildArea) {
 
     /** @return whether both spawns are set */
     public boolean complete() {
@@ -44,6 +45,7 @@ public record Arena(String name, String displayName, Material icon, boolean enab
      * @return copy
      */
     public Arena withEnabled(boolean enabled) {
-        return new Arena(name, displayName, icon, enabled, tags, spawnA, spawnB, spectator, buildLimit, voidY, goalA, goalB, goalRadius);
+        return new Arena(name, displayName, icon, enabled, tags, spawnA, spawnB, spectator, buildLimit, voidY, goalA, goalB, goalRadius,
+                buildArea);
     }
 }

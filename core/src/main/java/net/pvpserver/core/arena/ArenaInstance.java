@@ -146,11 +146,14 @@ public final class ArenaInstance {
      * @param x block x
      * @param y block y
      * @param z block z
-     * @return whether building is allowed at the position (horizontal template footprint, below the build limit)
+     * @return whether building is allowed at the position (template footprint, below the build limit and inside the
+     *         arena's build area when it has one)
      */
     public boolean canBuildAt(int x, int y, int z) {
-        return x >= originX && x < originX + template.sizeX() && z >= originZ && z < originZ + template.sizeZ()
+        boolean inFootprint = x >= originX && x < originX + template.sizeX() && z >= originZ && z < originZ + template.sizeZ()
                 && y >= originY && y <= originY + arena.buildLimit();
+        RelativeBox area = arena.buildArea();
+        return inFootprint && (area == null || area.contains(x - originX, y - originY, z - originZ));
     }
 
     /** @return absolute Y below which players count as fallen */

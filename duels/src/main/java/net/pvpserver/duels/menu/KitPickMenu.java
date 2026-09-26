@@ -51,7 +51,7 @@ public final class KitPickMenu extends PaginatedMenu {
     protected List<Button> content() {
         List<Button> buttons = new ArrayList<>();
         for (Kit kit : kits) {
-            var item = ItemBuilder.of(kit.icon()).lore(plugin.messages().getList("menu.kit-pick-lore")).build();
+            var item = ItemBuilder.of(kit.icon()).lore(kit.lore(plugin.messages().getList("menu.kit-pick-lore"))).build();
             buttons.add(new Button(item, (player, click) -> onPick.accept(player, kit)));
         }
         return buttons;

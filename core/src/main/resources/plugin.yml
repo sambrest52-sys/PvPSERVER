@@ -48,3 +48,4 @@ permissions:
       pvp.admin.kb: true
       pvp.admin.rank: true
       pvp.admin.stats: true
+      pvp.admin.kits: true

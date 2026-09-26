@@ -59,8 +59,11 @@ arenas:
   paste-y: 64
   max-instances: 150
   max-idle-per-arena: 6
-  prewarm-per-arena: 2
+  # Copies pasted per arena at startup (21 built-in arenas ship by default; more are pasted on demand).
+  prewarm-per-arena: 1
   instance-margin: 16
+  # Install the procedurally generated arena set on start (only arenas never installed before; see /arena generate).
+  install-builtin-arenas: true
   # Block placement budget for pasting / resetting arenas (per tick).
   blocks-per-tick: 20000
   max-millis-per-tick: 8

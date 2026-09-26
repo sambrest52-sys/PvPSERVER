@@ -12,6 +12,7 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -31,7 +32,12 @@ class PluginBootTest extends SmokeTestBase {
         assertTrue(duels.isEnabled(), "PvPDuels enabled");
         assertTrue(ffa.isEnabled(), "PvPFFA enabled");
         assertNotNull(Bukkit.getWorld("pvp_arenas"), "arena world created");
-        assertTrue(new File(core.getDataFolder(), "arenas/classic.arena").exists(), "placeholder arenas generated");
+        for (String arena : List.of("colosseum", "mossy_ruins", "frozen_lake", "nether_keep", "sky_temple", "sumo_dojo",
+                "sumo_lotus", "sumo_skyring", "sumo_islet", "boxing_ring", "boxing_gym", "boxing_rooftop", "uhc_plains",
+                "uhc_taiga", "uhc_mesa", "bridge_classic", "bridge_ruins", "bridge_nether", "spleef_classic", "spleef_layers",
+                "spleef_lava")) {
+            assertTrue(new File(core.getDataFolder(), "arenas/" + arena + ".arena").exists(), arena + " generated");
+        }
         assertTrue(new File(lobby.getDataFolder(), "hotbar.yml").exists(), "lobby wrote its own defaults");
         assertTrue(new File(duels.getDataFolder(), "scoreboard.yml").exists());
     }
@@ -99,9 +105,8 @@ class PluginBootTest extends SmokeTestBase {
         waitFor(() -> Bukkit.getWorld("pvp_ffa") != null, 3000);
         PlayerMock a = join("Killer");
         PlayerMock b = join("Victim");
-        assertTrue(run(a, "ffa nodebuff"));
-        assertTrue(run(b, "ffa nodebuff"));
-        waitFor(() -> false, 3000);
+        joinFfa(a, "nodebuff");
+        joinFfa(b, "nodebuff");
         assertEquals("pvp_ffa", a.getWorld().getName());
         // Move both out of the spawn safe zone and past spawn protection before fighting.
         a.teleport(a.getLocation().add(12, 0, 0));
@@ -180,7 +185,8 @@ class PluginBootTest extends SmokeTestBase {
         assertTrue(run(b, "duel accept Challenger"));
         waitFor(() -> "pvp_arenas".equals(a.getWorld().getName()) && "pvp_arenas".equals(b.getWorld().getName()), 5000);
         assertEquals("pvp_arenas", a.getWorld().getName(), "accepted duel starts a match");
-        assertEquals(Material.DIAMOND_SWORD, a.getInventory().getItem(0).getType(), "boxing kit applied");
+        assertTrue(a.getInventory().isEmpty(), "boxing is fought with fists");
+        assertTrue(a.hasPotionEffect(org.bukkit.potion.PotionEffectType.SPEED), "boxing kit applied (Speed II)");
         assertTrue(run(a, "leave"), "forfeit via /leave");
         waitFor(() -> "world".equals(a.getWorld().getName()) && "world".equals(b.getWorld().getName()), 8000);
         assertEquals("world", a.getWorld().getName());

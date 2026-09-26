@@ -33,9 +33,8 @@ class ServerScenariosTest extends SmokeTestBase {
         await("FFA world", () -> Bukkit.getWorld("pvp_ffa") != null, 3000);
         PlayerMock a = join("Hunter");
         PlayerMock b = join("Logger");
-        assertTrue(run(a, "ffa nodebuff"));
-        assertTrue(run(b, "ffa nodebuff"));
-        await("both in FFA", () -> in("pvp_ffa", a, b), 3000);
+        joinFfa(a, "nodebuff");
+        joinFfa(b, "nodebuff");
         Location spawn = a.getLocation().clone();
         a.teleport(spawn.clone().add(12, 0, 0));
         b.teleport(spawn.clone().add(13, 0, 0));
@@ -65,25 +64,25 @@ class ServerScenariosTest extends SmokeTestBase {
     void arenaCreatedInGameIsSavedAndPlayable() throws Exception {
         PlayerMock admin = join("Builder");
         admin.setOp(true);
-        // Paste the sumo template into the editor world to have something to capture.
-        assertTrue(run(admin, "arena edit sumo"));
+        // Paste the lotus sumo map into the editor world to have something to capture.
+        assertTrue(run(admin, "arena edit sumo_lotus"));
         await("editor paste", () -> "pvp_editor".equals(admin.getWorld().getName()), 5000);
-        // The editor teleports to spawn A, which sits at (7.5, 5, 10.5) inside the sumo template.
-        Location origin = admin.getLocation().clone().subtract(7.5, 5, 10.5);
+        // The editor teleports to spawn A, which sits at (9.5, 6, 12.5) inside the 25x10x25 lotus template.
+        Location origin = admin.getLocation().clone().subtract(9.5, 6, 12.5);
         assertTrue(run(admin, "arena cancel"));
 
         assertTrue(run(admin, "arena create ring"));
         admin.teleport(origin);
         assertTrue(run(admin, "arena pos1"));
-        admin.teleport(origin.clone().add(20, 9, 20));
+        admin.teleport(origin.clone().add(24, 9, 24));
         assertTrue(run(admin, "arena pos2"));
-        admin.teleport(at(origin, 7.5, 5, 10.5, -90));
+        admin.teleport(at(origin, 9.5, 6, 12.5, -90));
         assertTrue(run(admin, "arena setspawn a"));
-        admin.teleport(at(origin, 13.5, 5, 10.5, 90));
+        admin.teleport(at(origin, 15.5, 6, 12.5, 90));
         assertTrue(run(admin, "arena setspawn b"));
         assertTrue(run(admin, "arena tag remove standard"));
         assertTrue(run(admin, "arena tag add sumo"));
-        assertTrue(run(admin, "arena voidy " + (origin.getBlockY() + 1)));
+        assertTrue(run(admin, "arena voidy " + (origin.getBlockY() + 4)));
         assertTrue(run(admin, "arena save"));
         File template = new File(core.getDataFolder(), "arenas/ring.arena");
         await("template written", template::exists, 5000);
@@ -92,8 +91,10 @@ class ServerScenariosTest extends SmokeTestBase {
         assertEquals(List.of("sumo"), arenas.getStringList("arenas.ring.tags"));
         assertNotNull(arenas.getString("arenas.ring.spawn-a"));
 
-        // With the built-in sumo arena disabled, sumo matches must use the new arena.
-        assertTrue(run(admin, "arena disable sumo"));
+        // With the built-in sumo arenas disabled, sumo matches must use the new arena.
+        for (String builtin : List.of("sumo_dojo", "sumo_lotus", "sumo_skyring", "sumo_islet")) {
+            assertTrue(run(admin, "arena disable " + builtin));
+        }
         PlayerMock a = join("RingA");
         PlayerMock b = join("RingB");
         assertTrue(run(a, "queue join sumo unranked"));

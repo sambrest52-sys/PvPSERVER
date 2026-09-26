@@ -19,6 +19,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -284,10 +285,33 @@ public final class MatchManager {
         api.combat().applyKit(player, match.kit());
         if (match.kit().rules().bridge()) {
             dyeArmor(player, team.color());
+            teamBlocks(player, team.index());
         }
         api.sidebars().sidebar(player).healthBelowName(match.kit().rules().healthDisplay());
         KitService.heal(player);
         api.sidebars().refresh(player);
+    }
+
+    /** Bridge: white terracotta and wool in the kit become the team's colour (red for team A, blue for team B). */
+    private static void teamBlocks(Player player, int teamIndex) {
+        boolean red = teamIndex % 2 == 0;
+        ItemStack[] contents = player.getInventory().getStorageContents();
+        for (int i = 0; i < contents.length; i++) {
+            ItemStack item = contents[i];
+            if (item == null) {
+                continue;
+            }
+            Material replacement = switch (item.getType()) {
+                case WHITE_TERRACOTTA -> red ? Material.RED_TERRACOTTA : Material.BLUE_TERRACOTTA;
+                case WHITE_WOOL -> red ? Material.RED_WOOL : Material.BLUE_WOOL;
+                case WHITE_CONCRETE -> red ? Material.RED_CONCRETE : Material.BLUE_CONCRETE;
+                default -> null;
+            };
+            if (replacement != null) {
+                contents[i] = new ItemStack(replacement, item.getAmount());
+            }
+        }
+        player.getInventory().setStorageContents(contents);
     }
 
     private static void dyeArmor(Player player, NamedTextColor color) {

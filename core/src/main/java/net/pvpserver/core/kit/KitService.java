@@ -42,6 +42,7 @@ public final class KitService implements Reloadable {
     private final KitItemParser parser;
     private final NamespacedKey originKey;
     private final Map<String, Kit> kits = new LinkedHashMap<>();
+    private static final char LAYOUT_HASH_SEPARATOR = '|';
 
     /**
      * @param plugin core plugin
@@ -50,7 +51,7 @@ public final class KitService implements Reloadable {
      */
     public KitService(JavaPlugin plugin, ProfileService profiles, KitLayoutRepository layouts) {
         this.plugin = plugin;
-        this.file = new ConfigFile(plugin, "kits.yml");
+        this.file = new ConfigFile(plugin, "kits.yml", true);
         this.profiles = profiles;
         this.layouts = layouts;
         this.parser = new KitItemParser(plugin.getLogger(), new NamespacedKey(plugin, KitItemParser.SPECIAL_TAG));
@@ -126,11 +127,21 @@ public final class KitService implements Reloadable {
             icon = new ItemStack(Material.IRON_SWORD);
         }
         String displayName = section.getString("display-name", "<white>" + id);
-        icon = ItemBuilder.of(icon).name(MessageService.mini().deserialize(displayName)).hideFlags().build();
+        icon = ItemBuilder.of(icon).name(MessageService.mini().deserialize(displayName))
+                .lore(section.getStringList("description").stream().map(line -> MessageService.mini().deserialize(line)).toList())
+                .hideFlags().build();
         List<PotionEffect> effects = parser.parseEffects(id, section.getStringList("effects"));
         Set<String> tags = lower(section.getStringList("arena-tags"));
         if (tags.isEmpty()) {
             tags.add("standard");
+        }
+        ConfigurationSection rules = section.getConfigurationSection("rules");
+        if (rules != null) {
+            for (String key : rules.getKeys(false)) {
+                if (!KitRules.KEYS.contains(key)) {
+                    plugin.getLogger().warning("Kit " + id + ": unknown rule '" + key + "'");
+                }
+            }
         }
         return new Kit(id, displayName, icon,
                 section.getBoolean("enabled", true),
@@ -142,8 +153,11 @@ public final class KitService implements Reloadable {
                 section.getString("knockback", ""),
                 tags,
                 lower(section.getStringList("arenas")),
-                KitRules.parse(section.getConfigurationSection("rules")),
-                contents, armor, offhand, effects);
+                lower(section.getStringList("arena-blacklist")),
+                KitRules.parse(rules),
+                contents, armor, offhand, effects,
+                List.copyOf(section.getStringList("description")),
+                Kit.layoutHash(contents));
     }
 
     private static Set<String> lower(List<String> list) {
@@ -278,7 +292,7 @@ public final class KitService implements Reloadable {
      */
     public void saveLayout(Player player, Kit kit, KitLayout layout) {
         PlayerProfile profile = profiles.get(player);
-        String serialized = layout == null ? null : layout.serialize();
+        String serialized = layout == null ? null : kit.layoutHash() + LAYOUT_HASH_SEPARATOR + layout.serialize();
         if (profile != null) {
             if (serialized == null) {
                 profile.kitLayouts().remove(kit.id());
@@ -296,7 +310,26 @@ public final class KitService implements Reloadable {
      */
     public KitLayout layoutFor(Player player, Kit kit) {
         PlayerProfile profile = profiles.get(player);
-        return KitLayout.parse(profile == null ? null : profile.kitLayouts().get(kit.id()));
+        return storedLayout(kit, profile == null ? null : profile.kitLayouts().get(kit.id()));
+    }
+
+    /**
+     * Parses a stored layout ({@code <kit fingerprint>|<layout>}). Layouts saved for a different version of the kit,
+     * including ones stored before fingerprints existed, are ignored so a changed kit never scrambles inventories.
+     *
+     * @param kit kit
+     * @param stored stored value or null
+     * @return layout, or identity when missing or stale
+     */
+    static KitLayout storedLayout(Kit kit, String stored) {
+        if (stored == null) {
+            return KitLayout.parse(null);
+        }
+        int separator = stored.indexOf(LAYOUT_HASH_SEPARATOR);
+        if (separator < 0 || !stored.substring(0, separator).equals(kit.layoutHash())) {
+            return KitLayout.parse(null);
+        }
+        return KitLayout.parse(stored.substring(separator + 1));
     }
 
     /**

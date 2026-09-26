@@ -24,7 +24,7 @@ public final class KnockbackService implements Reloadable {
      * @param plugin core plugin
      */
     public KnockbackService(JavaPlugin plugin) {
-        this.file = new ConfigFile(plugin, "kb.yml");
+        this.file = new ConfigFile(plugin, "kb.yml", true);
         reload();
     }
 

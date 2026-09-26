@@ -128,7 +128,7 @@ public final class KitEditor implements KitEditorBridge, Listener {
                     break;
                 }
                 boolean custom = !plugin.api().kits().layoutFor(viewer, kit).isIdentity();
-                var item = ItemBuilder.of(kit.icon()).lore(plugin.menus().lore(custom ? "kit-editor-custom" : "kit-editor-default")).build();
+                var item = ItemBuilder.of(kit.icon()).lore(kit.lore(plugin.menus().lore(custom ? "kit-editor-custom" : "kit-editor-default"))).build();
                 set(slot++, new Button(item, (player, click) -> {
                     if (click.isRightClick() && custom) {
                         plugin.api().kits().saveLayout(player, kit, null);

@@ -17,6 +17,8 @@ import java.util.concurrent.CompletableFuture;
 public final class BlockPaster {
 
     private final Deque<Job> jobs = new ArrayDeque<>();
+    /** Opportunistic work (pool pre-warming); only runs when no urgent job is waiting. */
+    private final Deque<Job> background = new ArrayDeque<>();
     private int blocksPerTick;
     private long maxNanosPerTick;
     private BukkitTask task;
@@ -48,41 +50,61 @@ public final class BlockPaster {
         if (task != null) {
             task.cancel();
         }
-        while (!jobs.isEmpty()) {
-            Job job = jobs.poll();
-            while (!job.run(Integer.MAX_VALUE)) {
-                // drain
+        for (Deque<Job> queue : List.of(jobs, background)) {
+            while (!queue.isEmpty()) {
+                Job job = queue.poll();
+                while (!job.run(Integer.MAX_VALUE)) {
+                    // drain
+                }
+                job.future.complete(null);
             }
-            job.future.complete(null);
         }
     }
 
-    /** @return queued job count */
+    /** @return queued job count (urgent and background) */
     public int pending() {
-        return jobs.size();
+        return jobs.size() + background.size();
     }
 
     private void tick() {
         long start = System.nanoTime();
         int budget = blocksPerTick;
-        while (budget > 0 && !jobs.isEmpty() && System.nanoTime() - start < maxNanosPerTick) {
-            Job job = jobs.peek();
+        while (budget > 0 && (!jobs.isEmpty() || !background.isEmpty()) && System.nanoTime() - start < maxNanosPerTick) {
+            Deque<Job> queue = jobs.isEmpty() ? background : jobs;
+            Job job = queue.peek();
             int chunk = Math.min(budget, 2048);
             int before = job.done;
             boolean finished;
             try {
                 finished = job.run(chunk);
             } catch (RuntimeException e) {
-                jobs.poll();
+                queue.poll();
                 job.future.completeExceptionally(e);
                 continue;
             }
             budget -= Math.max(1, job.done - before);
             if (finished) {
-                jobs.poll();
+                queue.poll();
                 job.future.complete(null);
             }
         }
+    }
+
+    /**
+     * Pastes a template in the background: only while no match, FFA, editor or reset job is waiting (pool
+     * pre-warming).
+     *
+     * @param template template
+     * @param world world
+     * @param ox origin x
+     * @param oy origin y
+     * @param oz origin z
+     * @return completion future
+     */
+    public CompletableFuture<Void> pasteInBackground(ArenaTemplate template, World world, int ox, int oy, int oz) {
+        Job job = pasteJob(template, world, ox, oy, oz);
+        background.add(job);
+        return job.future;
     }
 
     /**
@@ -96,10 +118,16 @@ public final class BlockPaster {
      * @return completion future
      */
     public CompletableFuture<Void> paste(ArenaTemplate template, World world, int ox, int oy, int oz) {
+        Job job = pasteJob(template, world, ox, oy, oz);
+        jobs.add(job);
+        return job.future;
+    }
+
+    private Job pasteJob(ArenaTemplate template, World world, int ox, int oy, int oz) {
         BlockData[] palette = template.parsedPalette();
         int[] solid = template.solidIndices();
         short[] blocks = template.blocks();
-        Job job = new Job(solid.length) {
+        return new Job(solid.length) {
             @Override
             void apply(int i) {
                 int index = solid[i];
@@ -107,8 +135,6 @@ public final class BlockPaster {
                         .setBlockData(palette[blocks[index]], false);
             }
         };
-        jobs.add(job);
-        return job.future;
     }
 
     /**
@@ -151,6 +177,37 @@ public final class BlockPaster {
                 int index = solid[i];
                 world.getBlockAt(ox + template.xOf(index), oy + template.yOf(index), oz + template.zOf(index))
                         .setBlockData(air, false);
+            }
+        };
+        jobs.add(job);
+        return job.future;
+    }
+
+    /**
+     * Sets every non-air block in a box to air (clearing an area before re-pasting).
+     *
+     * @param world world
+     * @param ox min x
+     * @param oy min y
+     * @param oz min z
+     * @param sizeX size x (0 = nothing to clear)
+     * @param sizeY size y
+     * @param sizeZ size z
+     * @return completion future
+     */
+    public CompletableFuture<Void> clearBox(World world, int ox, int oy, int oz, int sizeX, int sizeY, int sizeZ) {
+        BlockData air = org.bukkit.Material.AIR.createBlockData();
+        int total = Math.max(0, sizeX) * Math.max(0, sizeY) * Math.max(0, sizeZ);
+        Job job = new Job(total) {
+            @Override
+            void apply(int i) {
+                int x = i % sizeX;
+                int z = (i / sizeX) % sizeZ;
+                int y = i / (sizeX * sizeZ);
+                var block = world.getBlockAt(ox + x, oy + y, oz + z);
+                if (!block.getType().isAir()) {
+                    block.setBlockData(air, false);
+                }
             }
         };
         jobs.add(job);

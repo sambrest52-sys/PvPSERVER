@@ -22,6 +22,9 @@ public final class ArenaEditSession {
     Integer buildLimitY;
     Integer voidY;
     double goalRadius = 1.6;
+    RelativeBox buildArea;
+    Location buildArea1;
+    Location buildArea2;
     String displayName;
     Material icon = Material.GRASS_BLOCK;
     Set<String> tags = new HashSet<>(Set.of("standard"));

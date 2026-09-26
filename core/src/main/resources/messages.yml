@@ -100,7 +100,12 @@ arena:
     - "<primary><bold>Arena <arena>"
     - " <gray>Tags: <white><tags>"
     - " <gray>Size: <white><size></white> <dark_gray>|</dark_gray> Build limit: <white><build_limit></white> <dark_gray>|</dark_gray> Void Y: <white><void_y>"
-    - " <gray>Enabled: <white><enabled></white> <dark_gray>|</dark_gray> Goals: <white><goals>"
+    - " <gray>Enabled: <white><enabled></white> <dark_gray>|</dark_gray> Goals: <white><goals></white> <dark_gray>|</dark_gray> Build area: <white><build_area>"
+  generating: "<prefix><gray>Generating <white><count></white> built-in arena(s)..."
+  generated: "<prefix><success>Regenerated <white><arenas></white>. New matches use the fresh copies."
+  unknown-builtin: "<prefix><error><arena> is not a built-in arena. Built-ins: <white><list>"
+  build-area-set: "<prefix><gray>Build area corner <white><corner></white> set to <white><location></white>."
+  build-area-cleared: "<prefix><gray>Build area cleared: blocks may be placed anywhere below the build limit."
   status: "<prefix><gray>Instances: <white><instances></white> (in use <white><in_use></white>, idle <white><idle></white>) <dark_gray>|</dark_gray> Waiting requests: <white><pending></white> <dark_gray>|</dark_gray> Paste jobs: <white><paste_jobs>"
 
 moderation:
@@ -227,6 +232,7 @@ admin:
   elo-set: "<prefix><success>Set <player>'s <kit> ELO to <elo>."
   stats-reset: "<prefix><success>Reset stats of <player> (<kit>)."
   leaderboards-refreshed: "<prefix><success>Leaderboards refreshed."
+  kit-given: "<prefix><success>Gave <kit> <success>to <player>. <gray>Use /spawn to reset."
   status:
     - "<primary><bold>Server status"
     - " <gray>TPS: <white><tps></white> <dark_gray>|</dark_gray> Memory: <white><memory></white> <dark_gray>|</dark_gray> Storage: <white><storage>"

@@ -65,9 +65,9 @@ public final class QueueMenu extends Menu {
             int elo = plugin.api().stats().eloOf(viewer.getUniqueId(), kit.id());
             var item = ItemBuilder.of(kit.icon())
                     .amount(Math.max(1, Math.min(64, queued)))
-                    .lore(plugin.messages().getList(ranked ? "menu.queue-lore-ranked" : "menu.queue-lore",
+                    .lore(kit.lore(plugin.messages().getList(ranked ? "menu.queue-lore-ranked" : "menu.queue-lore",
                             MessageService.p("queued", queued), MessageService.p("fighting", fighting), MessageService.p("elo", elo),
-                            MessageService.p("mode", mode.label())))
+                            MessageService.p("mode", mode.label()))))
                     .build();
             set(slot++, new Button(item, (player, click) -> {
                 player.closeInventory();

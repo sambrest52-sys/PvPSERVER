@@ -251,8 +251,8 @@ public final class MatchListener implements Listener {
         ArenaInstance arena = match.arena();
         KitRules rules = match.kit().rules();
         Block block = event.getBlock();
-        boolean allowed = rules.build() && match.state() == MatchState.FIGHTING && arena != null && arena.contains(block.getLocation())
-                && (!rules.breakPlacedOnly() || arena.isPlaced(block));
+        boolean allowed = match.state() == MatchState.FIGHTING && arena != null && arena.contains(block.getLocation())
+                && rules.canBreak(block.getType(), arena.isPlaced(block));
         if (!allowed) {
             event.setCancelled(true);
         } else {

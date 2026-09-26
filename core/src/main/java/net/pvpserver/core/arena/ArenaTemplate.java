@@ -11,8 +11,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -77,6 +75,7 @@ public final class ArenaTemplate {
                 try {
                     parsed[i] = Bukkit.createBlockData(palette[i]);
                 } catch (IllegalArgumentException e) {
+                    Bukkit.getLogger().warning("[PvPCore] Unknown block '" + palette[i] + "' in an arena template; using air");
                     parsed[i] = Bukkit.createBlockData("minecraft:air");
                 }
             }
@@ -88,13 +87,20 @@ public final class ArenaTemplate {
     /** @return indices of all non-air blocks, cached */
     public int[] solidIndices() {
         if (solidIndices == null) {
-            List<Integer> list = new ArrayList<>();
-            for (int i = 0; i < blocks.length; i++) {
-                if (blocks[i] != 0) {
-                    list.add(i);
+            int count = 0;
+            for (short block : blocks) {
+                if (block != 0) {
+                    count++;
                 }
             }
-            solidIndices = list.stream().mapToInt(Integer::intValue).toArray();
+            int[] indices = new int[count];
+            int next = 0;
+            for (int i = 0; i < blocks.length; i++) {
+                if (blocks[i] != 0) {
+                    indices[next++] = i;
+                }
+            }
+            solidIndices = indices;
         }
         return solidIndices;
     }

@@ -53,10 +53,11 @@ class MatchScenariosTest extends SmokeTestBase {
         assertTrue(run(a, "queue join bridge unranked"));
         assertTrue(run(b, "queue join bridge unranked"));
         awaitArena(a, b);
-        // Team A spawns on the low-z island and scores in goal B, 49 blocks further along z and 2 lower.
+        // Team A spawns on the low-z base; goal B is the pit 7 blocks behind team B's spawn, one block down.
         PlayerMock scorer = a.getLocation().getZ() < b.getLocation().getZ() ? a : b;
+        PlayerMock defender = scorer == a ? b : a;
         Location spawn = scorer.getLocation().clone();
-        Location enemyGoal = spawn.clone().add(0, -2, 49);
+        Location enemyGoal = defender.getLocation().clone().add(0, -1, 7);
         ticks(COUNTDOWN_TICKS);
 
         // Build on the bridge; the block must be journaled and removed when the arena returns to the pool.
@@ -71,9 +72,12 @@ class MatchScenariosTest extends SmokeTestBase {
         BlockPlaceEvent tooHigh = scorer.simulateBlockPlace(Material.WHITE_WOOL, spawn.clone().add(0, 30, 20));
         assertTrue(tooHigh.isCancelled(), "building above the arena's build limit is blocked");
 
-        for (int goal = 1; goal <= 3; goal++) {
+        // Bridge kit: first to 5 goals, and the white terracotta becomes the team colour.
+        assertEquals(Material.RED_TERRACOTTA, scorer.getInventory().getItem(3).getType(), "team A builds with red blocks");
+        assertEquals(Material.BLUE_TERRACOTTA, defender.getInventory().getItem(3).getType(), "team B builds with blue blocks");
+        for (int goal = 1; goal <= 5; goal++) {
             scorer.simulatePlayerMove(enemyGoal);
-            if (goal < 3) {
+            if (goal < 5) {
                 ticks(3);
                 assertEquals(spawn.getBlockZ(), scorer.getLocation().getBlockZ(), "goal " + goal + " sends players back to spawn");
                 assertTrue(in("pvp_arenas", a, b), "match continues after goal " + goal);

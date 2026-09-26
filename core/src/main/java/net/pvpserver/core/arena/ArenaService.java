@@ -90,11 +90,11 @@ public final class ArenaService implements Reloadable {
         pasteY = settings.getInt("paste-y", 64);
         maxInstances = Math.max(1, settings.getInt("max-instances", 150));
         maxIdlePerArena = Math.max(0, settings.getInt("max-idle-per-arena", 6));
-        prewarm = Math.max(0, settings.getInt("prewarm-per-arena", 2));
+        prewarm = Math.max(0, settings.getInt("prewarm-per-arena", 1));
         margin = Math.max(0, settings.getInt("instance-margin", 16));
         world = worlds.voidWorld(settings.getString("world", "pvp_arenas"), true);
-        if (!templateFolder.exists() || isEmpty(templateFolder)) {
-            ArenaGenerator.generateDefaults(plugin.getLogger(), templateFolder, file);
+        if (settings.getBoolean("install-builtin-arenas", true)) {
+            ArenaGenerator.installMissing(plugin.getLogger(), templateFolder, file);
         }
         paster.start();
         loadDefinitions();
@@ -111,11 +111,6 @@ public final class ArenaService implements Reloadable {
      */
     public CompletableFuture<Void> ready() {
         return ready;
-    }
-
-    private static boolean isEmpty(File folder) {
-        String[] files = folder.list((dir, name) -> name.endsWith(".arena"));
-        return files == null || files.length == 0;
     }
 
     @Override
@@ -147,7 +142,8 @@ public final class ArenaService implements Reloadable {
                     s.getBoolean("enabled", true), tags, RelativePosition.parse(s.getString("spawn-a")),
                     RelativePosition.parse(s.getString("spawn-b")), RelativePosition.parse(s.getString("spectator")),
                     s.getInt("build-limit", 12), s.getInt("void-y", -6), RelativePosition.parse(s.getString("goal-a")),
-                    RelativePosition.parse(s.getString("goal-b")), s.getDouble("goal-radius", 1.6)));
+                    RelativePosition.parse(s.getString("goal-b")), s.getDouble("goal-radius", 1.6),
+                    RelativeBox.parse(s.getString("build-area"))));
         }
         plugin.getLogger().info("Loaded " + arenas.size() + " arena definitions");
     }
@@ -162,7 +158,14 @@ public final class ArenaService implements Reloadable {
                     continue;
                 }
                 try {
-                    templates.put(name, ArenaTemplate.read(templateFile));
+                    ArenaTemplate template = ArenaTemplate.read(templateFile);
+                    int maxFootprint = Math.max(128, settings.getInt("slot-spacing", 512)) - 2 * Math.max(0, settings.getInt("instance-margin", 16));
+                    if (template.sizeX() > maxFootprint || template.sizeZ() > maxFootprint) {
+                        plugin.getLogger().severe("Arena " + name + " is " + template.sizeX() + "x" + template.sizeZ()
+                                + " blocks, larger than a pool slot allows (" + maxFootprint + "); raise arenas.slot-spacing");
+                        continue;
+                    }
+                    templates.put(name, template);
                 } catch (IOException e) {
                     plugin.getLogger().log(Level.SEVERE, "Could not read arena template " + name, e);
                 }
@@ -185,7 +188,8 @@ public final class ArenaService implements Reloadable {
                     break;
                 }
                 instance.state(ArenaInstance.State.PASTING);
-                paste(instance).thenRun(() -> Tasks.sync(() -> becomeIdle(instance)));
+                paster.pasteInBackground(instance.template(), world, instance.originX(), instance.originY(), instance.originZ())
+                        .thenRun(() -> Tasks.sync(() -> becomeIdle(instance)));
             }
         }
     }
@@ -217,14 +221,20 @@ public final class ArenaService implements Reloadable {
         if (candidates.isEmpty()) {
             return CompletableFuture.failedFuture(new NoArenaAvailableException("No arena matches"));
         }
+        // Pick the arena uniformly at random, then prefer a pooled copy of it; paste a new copy when none is idle
+        // (a few ticks even for large maps). Only when the pool is full does another arena's idle copy stand in.
         List<Arena> shuffled = new ArrayList<>(candidates);
         Collections.shuffle(shuffled, ThreadLocalRandom.current());
-        for (Arena arena : shuffled) {
-            Deque<ArenaInstance> queue = idle.get(arena.name());
-            if (queue != null && !queue.isEmpty()) {
-                ArenaInstance instance = queue.poll();
-                instance.state(ArenaInstance.State.IN_USE);
-                return CompletableFuture.completedFuture(instance);
+        ArenaInstance pooled = pollIdle(shuffled.get(0));
+        if (pooled != null) {
+            return CompletableFuture.completedFuture(pooled);
+        }
+        if (instances.size() >= maxInstances) {
+            for (Arena arena : shuffled) {
+                ArenaInstance other = pollIdle(arena);
+                if (other != null) {
+                    return CompletableFuture.completedFuture(other);
+                }
             }
         }
         if (instances.size() < maxInstances) {
@@ -246,6 +256,38 @@ public final class ArenaService implements Reloadable {
         Request request = new Request(filter, preferred, new CompletableFuture<>());
         pending.add(request);
         return request.future;
+    }
+
+    private ArenaInstance pollIdle(Arena arena) {
+        Deque<ArenaInstance> queue = idle.get(arena.name());
+        if (queue == null || queue.isEmpty()) {
+            return null;
+        }
+        ArenaInstance instance = queue.poll();
+        instance.state(ArenaInstance.State.IN_USE);
+        return instance;
+    }
+
+    /**
+     * Regenerates built-in arenas (all when {@code names} is empty) and installs them like editor saves.
+     *
+     * @param names built-in arena names, or empty for all
+     * @return future with the regenerated names (main thread)
+     */
+    public CompletableFuture<List<String>> regenerateBuiltins(Collection<String> names) {
+        List<String> targets = new ArrayList<>();
+        for (String name : names.isEmpty() ? net.pvpserver.core.arena.gen.BuiltinArenas.names() : names) {
+            String id = name.toLowerCase(Locale.ROOT);
+            if (net.pvpserver.core.arena.gen.BuiltinArenas.names().contains(id)) {
+                targets.add(id);
+            }
+        }
+        List<CompletableFuture<Void>> saves = new ArrayList<>();
+        for (String name : targets) {
+            net.pvpserver.core.arena.gen.GeneratedArena generated = net.pvpserver.core.arena.gen.BuiltinArenas.generate(name);
+            saves.add(save(generated.toArena(), generated.template()));
+        }
+        return CompletableFuture.allOf(saves.toArray(new CompletableFuture[0])).thenApply(v -> targets);
     }
 
     /**
@@ -457,6 +499,7 @@ public final class ArenaService implements Reloadable {
         c.set(base + "goal-a", arena.goalA() == null ? null : arena.goalA().serialize());
         c.set(base + "goal-b", arena.goalB() == null ? null : arena.goalB().serialize());
         c.set(base + "goal-radius", arena.goalRadius());
+        c.set(base + "build-area", arena.buildArea() == null ? null : arena.buildArea().serialize());
         file.save();
     }
 

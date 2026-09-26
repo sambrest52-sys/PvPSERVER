@@ -82,9 +82,22 @@ public final class FfaManager implements FfaBridge {
                 continue;
             }
             Optional<Kit> kit = api.kits().get(s.getString("kit", ""));
-            String templateName = s.getString("template", "classic");
+            String templateName = s.getString("template", "colosseum");
             Arena definition = api.arenas().arena(templateName);
             ArenaTemplate template = api.arenas().template(templateName);
+            if (kit.isPresent() && (definition == null || template == null)) {
+                // Template renamed or deleted (e.g. an upgrade from the old placeholder arenas): use one the kit allows.
+                for (Arena candidate : api.arenas().arenas()) {
+                    if (candidate.enabled() && candidate.complete() && api.arenas().template(candidate.name()) != null
+                            && kit.get().allowsArena(candidate.name(), candidate.tags())) {
+                        plugin.getLogger().info("FFA arena " + id + ": template '" + templateName + "' not found, using '"
+                                + candidate.name() + "'");
+                        definition = candidate;
+                        template = api.arenas().template(candidate.name());
+                        break;
+                    }
+                }
+            }
             if (kit.isEmpty() || definition == null || template == null) {
                 plugin.getLogger().warning("FFA arena " + id + " skipped: unknown kit or template '" + templateName + "'");
                 continue;
