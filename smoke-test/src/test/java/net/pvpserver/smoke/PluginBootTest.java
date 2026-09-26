@@ -137,6 +137,7 @@ class PluginBootTest extends SmokeTestBase {
         assertTrue(run(staff, "mute Member 10m spam"));
         waitFor(() -> false, 500);
         assertTrue(run(staff, "pvpadmin reload"));
+        waitFor(() -> false, 1500); // let the asynchronous template reload finish before the test folder is deleted
         assertTrue(run(staff, "arena list"));
         assertTrue(run(staff, "kb set default horizontal 0.41"));
     }

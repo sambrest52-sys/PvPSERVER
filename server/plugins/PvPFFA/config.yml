@@ -5,7 +5,8 @@ world: pvp_ffa
 menu-title: "<dark_gray>Free For All"
 allow-parties: true
 
-# Each arena pastes a core arena template (arenas.yml) once at startup and uses one kit.
+# Each arena pastes a core arena template (arenas.yml) once at startup and uses one kit. If the template does not
+# exist, the first arena the kit allows is used instead.
 #   ranked: kills adjust the per-kit FFA rating
 #   knockback: knockback profile override ("" = kit profile)
 #   safe-zone-radius: no combat within this radius of a spawn; combat-tagged players can't re-enter
@@ -14,28 +15,28 @@ arenas:
   nodebuff:
     display-name: "<aqua>NoDebuff FFA"
     kit: nodebuff
-    template: classic
+    template: colosseum
     ranked: false
     icon: SPLASH_POTION
     safe-zone-radius: 5
   nodebuff-ranked:
     display-name: "<aqua>NoDebuff FFA <accent>(Ranked)"
     kit: nodebuff
-    template: classic
+    template: mossy_ruins
     ranked: true
     icon: DIAMOND_SWORD
     safe-zone-radius: 5
   gapple:
     display-name: "<gold>Gapple FFA"
     kit: gapple
-    template: nether
+    template: nether_keep
     ranked: false
     icon: ENCHANTED_GOLDEN_APPLE
     safe-zone-radius: 5
   classic:
     display-name: "<white>Classic FFA"
     kit: classic
-    template: classic
+    template: frozen_lake
     ranked: false
     icon: BOW
     safe-zone-radius: 5

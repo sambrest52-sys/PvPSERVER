@@ -112,6 +112,19 @@ public final class ArenaEditor implements Listener {
             messages.send(player, "arena.not-found", MessageService.p("arena", name));
             return;
         }
+        open(player, arena, template, session -> messages.send(player, "arena.editing", MessageService.p("arena", arena.name())));
+    }
+
+    /**
+     * Pastes a template into the editor world and opens an edit session pre-filled from a definition (whose
+     * positions are relative to the template). Used by {@code /arena edit} and by imports.
+     *
+     * @param player admin
+     * @param arena definition (spawns may be null)
+     * @param template blocks
+     * @param onOpened called on the main thread once the paste is done and the admin was teleported
+     */
+    void open(Player player, Arena arena, ArenaTemplate template, java.util.function.Consumer<ArenaEditSession> onOpened) {
         World world = editorWorld();
         int[] slot = editorSlot(arena.name(), template);
         int ox = slot[0] * 512;
@@ -141,7 +154,7 @@ public final class ArenaEditor implements Listener {
             giveWand(player);
             Location tp = session.spawnA != null ? session.spawnA : session.pos1.clone().add(template.sizeX() / 2.0, template.sizeY(), template.sizeZ() / 2.0);
             player.teleport(tp);
-            messages.send(player, "arena.editing", MessageService.p("arena", arena.name()));
+            onOpened.accept(session);
         }));
     }
 

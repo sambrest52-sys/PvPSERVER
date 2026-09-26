@@ -163,7 +163,7 @@ public final class PvPCore extends JavaPlugin implements PracticeApi {
         List<BaseCommand> commands = new ArrayList<>();
         commands.add(new PartyCommand(messages, parties, bridges));
         commands.add(new PartyCommand.PartyChatCommand(messages, parties));
-        commands.add(new ArenaCommand(messages, arenas, arenaEditor));
+        commands.add(new ArenaCommand(messages, arenas, arenaEditor, new net.pvpserver.core.arena.ArenaImporter(this, arenas, arenaEditor, worlds, messages)));
         commands.addAll(ModerationCommands.create(messages, punishments, staff, reports, profiles));
         commands.addAll(ChatCommands.create(messages, chat, profiles));
         commands.addAll(AdminCommands.create(this, database.type().name()));

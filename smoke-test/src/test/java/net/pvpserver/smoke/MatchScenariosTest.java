@@ -352,6 +352,50 @@ class MatchScenariosTest extends SmokeTestBase {
         awaitLobby(back, b);
     }
 
+    @Test
+    void soupHealsInstantlyAndSpleefOnlyBreaksSnow() throws Exception {
+        PlayerMock a = join("SoupA");
+        PlayerMock b = join("SoupB");
+        assertTrue(run(a, "queue join soup unranked"));
+        assertTrue(run(b, "queue join soup unranked"));
+        awaitArena(a, b);
+        ticks(COUNTDOWN_TICKS);
+        closeIn(b, a);
+        hit(b, a, 10.0);
+        assertTrue(a.getHealth() < 20.0, "hit landed");
+        double before = a.getHealth();
+        a.getInventory().setHeldItemSlot(5);
+        assertEquals(Material.MUSHROOM_STEW, a.getInventory().getItemInMainHand().getType());
+        org.bukkit.event.player.PlayerInteractEvent soup = new org.bukkit.event.player.PlayerInteractEvent(a,
+                org.bukkit.event.block.Action.RIGHT_CLICK_AIR, a.getInventory().getItemInMainHand(), null,
+                org.bukkit.block.BlockFace.SELF, org.bukkit.inventory.EquipmentSlot.HAND);
+        server.getPluginManager().callEvent(soup);
+        assertEquals(Math.min(20.0, before + 7.0), a.getHealth(), 0.01, "soup heals 3.5 hearts at once");
+        assertTrue(a.getInventory().getItemInMainHand().getType().isAir(), "the stew is used up and leaves no bowl");
+        assertTrue(run(a, "leave"));
+        awaitLobby(a, b);
+
+        assertTrue(run(a, "queue join spleef unranked"));
+        assertTrue(run(b, "queue join spleef unranked"));
+        awaitArena(a, b);
+        ticks(COUNTDOWN_TICKS);
+        Block snow = b.getLocation().getBlock().getRelative(org.bukkit.block.BlockFace.DOWN);
+        assertEquals(Material.SNOW_BLOCK, snow.getType(), "spleef floor is snow");
+        assertFalse(a.simulateBlockBreak(snow).isCancelled(), "snow can be dug");
+        Block wall = null;
+        for (int dx = 1; dx < 20 && wall == null; dx++) {
+            Block candidate = snow.getRelative(dx, 0, 0);
+            if (!candidate.getType().isAir() && candidate.getType() != Material.SNOW_BLOCK) {
+                wall = candidate;
+            }
+        }
+        assertNotNull(wall, "found the arena wall");
+        assertTrue(a.simulateBlockBreak(wall).isCancelled(), "anything but snow is protected (" + wall.getType() + ")");
+        assertTrue(run(a, "leave"));
+        awaitLobby(a, b);
+        await("dug snow restored", () -> snow.getType() == Material.SNOW_BLOCK, 3000);
+    }
+
     /** @return {@code kit|winners|losers} for every recorded match, oldest first */
     private List<String> matchRows() throws SQLException, InterruptedException {
         waitFor(() -> false, 300);

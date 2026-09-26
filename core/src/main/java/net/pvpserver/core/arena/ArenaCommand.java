@@ -21,16 +21,19 @@ public final class ArenaCommand extends BaseCommand {
 
     private final ArenaService arenas;
     private final ArenaEditor editor;
+    private final ArenaImporter importer;
 
     /**
      * @param messages messages
      * @param arenas arena service
      * @param editor editor
+     * @param importer schematic/world importer
      */
-    public ArenaCommand(MessageService messages, ArenaService arenas, ArenaEditor editor) {
+    public ArenaCommand(MessageService messages, ArenaService arenas, ArenaEditor editor, ArenaImporter importer) {
         super(messages, "arena", List.of("arenas"), PERMISSION, "Create and manage arenas", "", false);
         this.arenas = arenas;
         this.editor = editor;
+        this.importer = importer;
 
         sub(new Sub("list", "list", "List arenas", false, 0, (s, a) -> list(s)));
         sub(new Sub("info", "info <arena>", "Show arena details", false, 1, (s, a) -> info(s, a[0])));
@@ -137,6 +140,17 @@ public final class ArenaCommand extends BaseCommand {
                 default -> usageOf(s, "buildarea <1|2|clear>");
             }
         })));
+        sub(new Sub("import", "import [file] [name] [save]", "Import a .schem/.schematic/.arena from plugins/PvPCore/imports", true, 0, (s, a) -> {
+            if (a.length == 0) {
+                importer.list(s);
+                return;
+            }
+            boolean save = a.length > 1 && a[a.length - 1].equalsIgnoreCase("save");
+            String name = a.length > 2 || (a.length == 2 && !save) ? a[1] : null;
+            importer.importSchematic((Player) s, a[0], name, save);
+        }));
+        sub(new Sub("importworld", "importworld <folder>", "Load a world folder from plugins/PvPCore/imports to capture arenas from", true, 1,
+                (s, a) -> importer.importWorld((Player) s, a[0])));
         sub(new Sub("generate", "generate <arena|all>", "Regenerate built-in arenas from code", false, 1, (s, a) -> {
             java.util.Set<String> builtins = net.pvpserver.core.arena.gen.BuiltinArenas.names();
             List<String> names = a[0].equalsIgnoreCase("all") ? List.of() : List.of(a[0].toLowerCase(java.util.Locale.ROOT));
@@ -263,6 +277,8 @@ public final class ArenaCommand extends BaseCommand {
                 case "setgoal" -> List.of("a", "b");
                 case "tag" -> args.length == 1 ? List.of("add", "remove") : List.of("standard", "build", "sumo", "boxing", "bridge", "spleef");
                 case "buildarea" -> List.of("1", "2", "clear");
+                case "import" -> importer.candidates().stream().filter(n -> !n.endsWith("/")).toList();
+                case "importworld" -> importer.candidates().stream().filter(n -> n.endsWith("/")).map(n -> n.substring(0, n.length() - 1)).toList();
                 case "generate" -> {
                     List<String> names = new java.util.ArrayList<>(net.pvpserver.core.arena.gen.BuiltinArenas.names());
                     names.add(0, "all");

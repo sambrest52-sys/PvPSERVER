@@ -46,5 +46,8 @@ live in core and are registered by whichever plugin implements them.
   The arena world is deleted and recreated on every start, which also makes crash cleanup free.
 * **Per-tick budgets.** Arena pasting, sidebar refreshes and leaderboard hologram updates are spread
   across ticks with configurable limits.
+* **Arena content is code.** `arena/gen` builds the built-in arenas deterministically on a Bukkit-free
+  `TemplateBuilder`, and `arena/io` reads NBT schematics (Sponge v1-3, legacy MCEdit). Both are unit-tested without
+  a server. `ArenaImporter` and `ArenaEditor` bring imported maps into the pool through the normal editor.
 * **Pure logic is Bukkit-free.** ELO (`EloCalculator`), parties (`Party`) and queue matching
   (`QueueMatcher`) have no Bukkit dependencies and are covered by JUnit tests.

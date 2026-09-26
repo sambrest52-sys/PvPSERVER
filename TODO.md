@@ -21,7 +21,9 @@
 
 ## Gameplay
 
-- [ ] More kits: Soup, Archer, Axe, Spleef, Pearl Fight, MLG Rush, Battle Rush, Stick Fight, HCF/Diamond, Vanilla (1.21 crits + shields), Mace.
+- [ ] More kits: Axe, Pearl Fight, MLG Rush, Battle Rush, Stick Fight, HCF/Diamond, Vanilla (1.21 crits + shields), Mace.
+- [ ] Arena voting and per-arena weights; more generator themes (city, desert temple, end island).
+- [ ] Bridge: pre-round glass cages and a goal portal effect.
 - [ ] Full 1.8 damage/armor table option (sword damage, armor toughness removal, 1.8 critical rules).
 - [ ] Tournaments / events (Sumo event, brackets, KOTH-style events) with a `/host` command and rewards.
 - [ ] Bot fights (practice against an NPC), e.g. via a Citizens or packet-based NPC integration.

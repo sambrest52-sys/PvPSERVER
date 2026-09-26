@@ -34,6 +34,26 @@ public final class TemplateBuilder {
         id(AIR);
     }
 
+    /**
+     * Copies an existing template into a builder (for inspection or editing).
+     *
+     * @param template template
+     * @return builder with the same blocks
+     */
+    public static TemplateBuilder from(ArenaTemplate template) {
+        TemplateBuilder builder = new TemplateBuilder(template.sizeX(), template.sizeY(), template.sizeZ());
+        short[] translate = new short[template.palette().length];
+        for (int i = 1; i < translate.length; i++) {
+            String data = template.palette()[i];
+            translate[i] = data.equals(AIR) ? 0 : builder.id(data);
+        }
+        short[] source = template.blocks();
+        for (int i = 0; i < source.length; i++) {
+            builder.blocks[i] = translate[source[i]];
+        }
+        return builder;
+    }
+
     private short id(String data) {
         Short existing = lookup.get(data);
         if (existing != null) {
@@ -249,6 +269,28 @@ public final class TemplateBuilder {
                     set(x, y, z, state.toString());
                 }
             }
+        }
+    }
+
+    /**
+     * Rewrites every palette entry (e.g. legacy ids to modern block data). Entries mapped to the same value are
+     * merged and entries mapped to air are removed.
+     *
+     * @param mapping old block data string to new
+     */
+    public void remapPalette(java.util.function.UnaryOperator<String> mapping) {
+        List<String> old = new ArrayList<>(palette);
+        palette.clear();
+        lookup.clear();
+        id(AIR);
+        short[] translate = new short[old.size()];
+        for (int i = 1; i < old.size(); i++) {
+            String mapped = mapping.apply(old.get(i));
+            String normalized = mapped == null ? AIR : normalize(mapped);
+            translate[i] = normalized.equals(AIR) ? 0 : id(normalized);
+        }
+        for (int i = 0; i < blocks.length; i++) {
+            blocks[i] = translate[blocks[i]];
         }
     }
 

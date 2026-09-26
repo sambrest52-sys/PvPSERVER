@@ -152,6 +152,9 @@ public final class ArenaService implements Reloadable {
         List<String> names = new ArrayList<>(arenas.keySet());
         return CompletableFuture.runAsync(() -> {
             for (String name : names) {
+                if (!plugin.isEnabled()) {
+                    return; // disabled mid-reload (shutdown): nothing left to load into
+                }
                 File templateFile = new File(templateFolder, name + ".arena");
                 if (!templateFile.exists()) {
                     plugin.getLogger().warning("Arena " + name + " has no template file (" + templateFile.getName() + ")");

@@ -119,6 +119,162 @@ class ServerScenariosTest extends SmokeTestBase {
         return location;
     }
 
+    // ------------------------------------------------------------------ importing arenas
+
+    /** Writes a gzip NBT compound like WorldEdit does (only the tag types a Sponge schematic needs). */
+    private static byte[] nbt(String rootName, java.util.Map<String, Object> root) throws java.io.IOException {
+        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+        try (java.io.DataOutputStream out = new java.io.DataOutputStream(new java.util.zip.GZIPOutputStream(bytes))) {
+            out.writeByte(10);
+            out.writeUTF(rootName);
+            compound(out, root);
+        }
+        return bytes.toByteArray();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void compound(java.io.DataOutputStream out, java.util.Map<String, Object> map) throws java.io.IOException {
+        for (var entry : map.entrySet()) {
+            Object v = entry.getValue();
+            int type = v instanceof Short ? 2 : v instanceof Integer ? 3 : v instanceof byte[] ? 7 : v instanceof String ? 8
+                    : v instanceof List<?> ? 9 : v instanceof java.util.Map<?, ?> ? 10 : v instanceof int[] ? 11 : -1;
+            out.writeByte(type);
+            out.writeUTF(entry.getKey());
+            value(out, v);
+        }
+        out.writeByte(0);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void value(java.io.DataOutputStream out, Object v) throws java.io.IOException {
+        if (v instanceof Short sh) {
+            out.writeShort(sh);
+        } else if (v instanceof Integer i) {
+            out.writeInt(i);
+        } else if (v instanceof byte[] b) {
+            out.writeInt(b.length);
+            out.write(b);
+        } else if (v instanceof String str) {
+            out.writeUTF(str);
+        } else if (v instanceof List<?> list) {
+            out.writeByte(list.isEmpty() ? 0 : list.get(0) instanceof String ? 8 : 10);
+            out.writeInt(list.size());
+            for (Object element : list) {
+                value(out, element);
+            }
+        } else if (v instanceof java.util.Map<?, ?> m) {
+            compound(out, (java.util.Map<String, Object>) m);
+        } else if (v instanceof int[] ints) {
+            out.writeInt(ints.length);
+            for (int i : ints) {
+                out.writeInt(i);
+            }
+        }
+    }
+
+    /** A 15x4x15 quartz sumo disc (radius 6) with [A] and [B] signs, as a Sponge v2 schematic. */
+    private static byte[] sumoSchematic() throws java.io.IOException {
+        int w = 15;
+        int h = 4;
+        int l = 15;
+        java.io.ByteArrayOutputStream data = new java.io.ByteArrayOutputStream();
+        for (int y = 0; y < h; y++) {
+            for (int z = 0; z < l; z++) {
+                for (int x = 0; x < w; x++) {
+                    double d = Math.hypot(x - 7, z - 7);
+                    boolean floor = y == 1 && d <= 6;
+                    boolean sign = y == 2 && z == 7 && (x == 4 || x == 10);
+                    data.write(sign ? 2 : floor ? 1 : 0);
+                }
+            }
+        }
+        java.util.Map<String, Object> palette = new java.util.LinkedHashMap<>();
+        palette.put("minecraft:air", 0);
+        palette.put("minecraft:quartz_block", 1);
+        palette.put("minecraft:oak_sign[rotation=4,waterlogged=false]", 2);
+        java.util.List<Object> signs = new java.util.ArrayList<>();
+        for (String[] s : new String[][]{{"4", "[A]"}, {"10", "[B]"}}) {
+            java.util.Map<String, Object> text = new java.util.LinkedHashMap<>();
+            text.put("messages", List.of("\"" + s[1] + "\"", "\"\"", "\"\"", "\"\""));
+            java.util.Map<String, Object> entity = new java.util.LinkedHashMap<>();
+            entity.put("Pos", new int[]{Integer.parseInt(s[0]), 2, 7});
+            entity.put("Id", "minecraft:sign");
+            entity.put("front_text", text);
+            signs.add(entity);
+        }
+        java.util.Map<String, Object> schematic = new java.util.LinkedHashMap<>();
+        schematic.put("Version", 2);
+        schematic.put("DataVersion", 4556);
+        schematic.put("Width", (short) w);
+        schematic.put("Height", (short) h);
+        schematic.put("Length", (short) l);
+        schematic.put("PaletteMax", 3);
+        schematic.put("Palette", palette);
+        schematic.put("BlockData", data.toByteArray());
+        schematic.put("BlockEntities", signs);
+        return nbt("Schematic", schematic);
+    }
+
+    @Test
+    void importedSchematicBecomesAPlayableArena() throws Exception {
+        PlayerMock admin = join("Importer");
+        admin.setOp(true);
+        File imports = new File(core.getDataFolder(), "imports");
+        assertTrue(new File(imports, "README.txt").exists(), "import folder explains itself");
+        java.nio.file.Files.write(new File(imports, "quartz_ring.schem").toPath(), sumoSchematic());
+
+        drain(admin);
+        assertTrue(run(admin, "arena import"));
+        assertTrue(drain(admin).stream().anyMatch(m -> m.contains("quartz_ring.schem")), "import lists the file");
+        assertTrue(run(admin, "arena import quartz_ring"));
+        await("schematic pasted into the editor", () -> "pvp_editor".equals(admin.getWorld().getName()), 5000);
+        assertTrue(drain(admin).stream().anyMatch(m -> m.contains("Imported quartz_ring") && m.contains("from [A]/[B] signs")),
+                "spawns taken from the marker signs");
+        assertEquals(Material.QUARTZ_BLOCK, admin.getLocation().getBlock().getRelative(BlockFace.DOWN).getType(),
+                "teleported onto spawn A, which stands on the imported floor");
+        assertTrue(admin.getLocation().getBlock().getType().isAir(), "the marker sign was removed");
+        assertTrue(run(admin, "arena tag remove standard"));
+        assertTrue(run(admin, "arena tag add sumo"));
+        assertTrue(run(admin, "arena save"));
+        await("imported template saved", () -> new File(core.getDataFolder(), "arenas/quartz_ring.arena").exists(), 5000);
+        waitFor(() -> false, 300);
+
+        for (String builtin : List.of("sumo_dojo", "sumo_lotus", "sumo_skyring", "sumo_islet")) {
+            assertTrue(run(admin, "arena disable " + builtin));
+        }
+        PlayerMock a = join("QuartzA");
+        PlayerMock b = join("QuartzB");
+        drain(a);
+        assertTrue(run(a, "queue join sumo unranked"));
+        assertTrue(run(b, "queue join sumo unranked"));
+        awaitArena(a, b);
+        assertEquals(Material.QUARTZ_BLOCK, a.getLocation().getBlock().getRelative(BlockFace.DOWN).getType());
+        assertTrue(Math.abs(a.getLocation().getX() - b.getLocation().getX()) > 5, "players start on the two marked spots");
+        assertTrue(drain(a).stream().anyMatch(m -> m.contains("Arena: quartz_ring")), "sumo is played on the imported arena");
+        assertTrue(run(a, "leave"));
+        awaitLobby(a, b);
+
+        // The one-step form saves straight into the pool.
+        assertTrue(run(admin, "arena import quartz_ring.schem quick_ring save"));
+        await("one-step import saved", () -> new File(core.getDataFolder(), "arenas/quick_ring.arena").exists(), 5000);
+    }
+
+    @Test
+    void worldFolderImportLoadsTheWorld() throws Exception {
+        PlayerMock admin = join("WorldImporter");
+        admin.setOp(true);
+        File worldFolder = new File(core.getDataFolder(), "imports/old_map");
+        new File(worldFolder, "region").mkdirs();
+        java.nio.file.Files.write(new File(worldFolder, "level.dat").toPath(), new byte[]{0});
+        java.nio.file.Files.write(new File(worldFolder, "uid.dat").toPath(), new byte[]{1, 2, 3});
+        assertTrue(run(admin, "arena importworld old_map"));
+        await("imported world loaded", () -> Bukkit.getWorld("import_old_map") != null && "import_old_map".equals(admin.getWorld().getName()), 5000);
+        File copy = new File(server.getWorldContainer(), "import_old_map");
+        assertTrue(new File(copy, "level.dat").exists(), "world copied into the server");
+        assertFalse(new File(copy, "uid.dat").exists(), "the copy gets its own world UUID");
+        assertTrue(run(admin, "arena create captured"), "the normal editor flow continues from here");
+    }
+
     @Test
     void leaderboardHologramIsSpawnedAndRemoved() throws Exception {
         PlayerMock admin = join("HoloAdmin");
