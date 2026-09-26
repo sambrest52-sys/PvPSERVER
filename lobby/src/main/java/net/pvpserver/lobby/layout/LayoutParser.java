@@ -1,6 +1,7 @@
 package net.pvpserver.lobby.layout;
 
 import net.pvpserver.lobby.layout.LobbyLayout.Border;
+import net.pvpserver.lobby.layout.LobbyLayout.Button;
 import net.pvpserver.lobby.layout.LobbyLayout.Egg;
 import net.pvpserver.lobby.layout.LobbyLayout.Emitter;
 import net.pvpserver.lobby.layout.LobbyLayout.LaunchPad;
@@ -52,7 +53,8 @@ public final class LayoutParser {
             }
         }
         return new LobbyLayout(spawn, root.getInt("void-y", 0), border, points(root, "npcs", warnings),
-                points(root, "holograms", warnings), portals(root, warnings), pads(root, warnings), parkour(root, warnings),
+                points(root, "holograms", warnings), portals(root, warnings), pads(root, warnings), buttons(root, warnings),
+                parkour(root, warnings),
                 eggs(root, warnings), zones(root, warnings), emitters(root, warnings), wall(root, warnings));
     }
 
@@ -150,6 +152,25 @@ public final class LayoutParser {
             }
         }
         return pads;
+    }
+
+    private static List<Button> buttons(ConfigurationSection root, List<String> warnings) {
+        List<Button> buttons = new ArrayList<>();
+        List<Map<?, ?>> list = root.getMapList("buttons");
+        for (int i = 0; i < list.size(); i++) {
+            Map<?, ?> entry = list.get(i);
+            try {
+                BlockPos at = BlockPos.parse(String.valueOf(entry.get("at")));
+                Object action = entry.get("action");
+                if (action == null || String.valueOf(action).isBlank()) {
+                    throw new IllegalArgumentException("missing action");
+                }
+                buttons.add(new Button(at, String.valueOf(action)));
+            } catch (IllegalArgumentException e) {
+                warnings.add("buttons[" + i + "]: " + e.getMessage());
+            }
+        }
+        return buttons;
     }
 
     private static Parkour parkour(ConfigurationSection root, List<String> warnings) {
@@ -287,6 +308,14 @@ public final class LayoutParser {
             pads.add(entry);
         }
         root.set("launch-pads", pads);
+        List<Map<String, Object>> buttons = new ArrayList<>();
+        for (Button button : layout.buttons()) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("at", button.at().format());
+            entry.put("action", button.action());
+            buttons.add(entry);
+        }
+        root.set("buttons", buttons);
         if (layout.parkour() != null) {
             Parkour parkour = layout.parkour();
             root.set("parkour.start", parkour.start().format());

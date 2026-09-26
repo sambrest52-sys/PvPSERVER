@@ -15,6 +15,7 @@ import java.util.Map;
  * @param holograms hologram id to position
  * @param portals walk-in portals
  * @param pads launch pads
+ * @param buttons clickable blocks (anvils, lecterns...) that run an action
  * @param parkour parkour course (null = none)
  * @param eggs easter eggs
  * @param zones named areas (entry messages)
@@ -22,7 +23,8 @@ import java.util.Map;
  * @param wall leaderboard wall (null = none)
  */
 public record LobbyLayout(Point spawn, int voidY, Border border, Map<String, Point> npcs, Map<String, Point> holograms,
-                          List<Portal> portals, List<LaunchPad> pads, Parkour parkour, List<Egg> eggs, List<Zone> zones,
+                          List<Portal> portals, List<LaunchPad> pads, List<Button> buttons, Parkour parkour, List<Egg> eggs,
+                          List<Zone> zones,
                           List<Emitter> emitters, Wall wall) {
 
     /**
@@ -55,6 +57,15 @@ public record LobbyLayout(Point spawn, int voidY, Border border, Map<String, Poi
      * @param vz velocity z
      */
     public record LaunchPad(BlockPos at, double vx, double vy, double vz) {
+    }
+
+    /**
+     * A block that runs an action when right-clicked.
+     *
+     * @param at block
+     * @param action action (same list as NPCs)
+     */
+    public record Button(BlockPos at, String action) {
     }
 
     /**
@@ -136,8 +147,8 @@ public record LobbyLayout(Point spawn, int voidY, Border border, Map<String, Poi
 
     /** @return an empty layout with a spawn at 0 65 0 */
     public static LobbyLayout empty() {
-        return new LobbyLayout(Point.of(0.5, 65, 0.5), 0, null, Map.of(), Map.of(), List.of(), List.of(), null, List.of(),
-                List.of(), List.of(), null);
+        return new LobbyLayout(Point.of(0.5, 65, 0.5), 0, null, Map.of(), Map.of(), List.of(), List.of(), List.of(), null,
+                List.of(), List.of(), List.of(), null);
     }
 
     /**
@@ -145,7 +156,7 @@ public record LobbyLayout(Point spawn, int voidY, Border border, Map<String, Poi
      * @return copy with a new spawn
      */
     public LobbyLayout withSpawn(Point newSpawn) {
-        return new LobbyLayout(newSpawn, voidY, border, npcs, holograms, portals, pads, parkour, eggs, zones, emitters, wall);
+        return new LobbyLayout(newSpawn, voidY, border, npcs, holograms, portals, pads, buttons, parkour, eggs, zones, emitters, wall);
     }
 
     /**
@@ -154,20 +165,22 @@ public record LobbyLayout(Point spawn, int voidY, Border border, Map<String, Poi
      * @return copy with new NPC and hologram positions
      */
     public LobbyLayout withPlacements(Map<String, Point> newNpcs, Map<String, Point> newHolograms) {
-        return new LobbyLayout(spawn, voidY, border, Map.copyOf(newNpcs), Map.copyOf(newHolograms), portals, pads, parkour, eggs,
-                zones, emitters, wall);
+        return new LobbyLayout(spawn, voidY, border, Map.copyOf(newNpcs), Map.copyOf(newHolograms), portals, pads, buttons,
+                parkour, eggs, zones, emitters, wall);
     }
 
     /**
      * @param newPortals portals
      * @param newPads pads
+     * @param newButtons buttons
      * @param newParkour parkour
      * @param newEggs eggs
      * @return copy with new triggers
      */
-    public LobbyLayout withTriggers(List<Portal> newPortals, List<LaunchPad> newPads, Parkour newParkour, List<Egg> newEggs) {
-        return new LobbyLayout(spawn, voidY, border, npcs, holograms, List.copyOf(newPortals), List.copyOf(newPads), newParkour,
-                List.copyOf(newEggs), zones, emitters, wall);
+    public LobbyLayout withTriggers(List<Portal> newPortals, List<LaunchPad> newPads, List<Button> newButtons, Parkour newParkour,
+                                    List<Egg> newEggs) {
+        return new LobbyLayout(spawn, voidY, border, npcs, holograms, List.copyOf(newPortals), List.copyOf(newPads),
+                List.copyOf(newButtons), newParkour, List.copyOf(newEggs), zones, emitters, wall);
     }
 
     /**
@@ -175,7 +188,31 @@ public record LobbyLayout(Point spawn, int voidY, Border border, Map<String, Poi
      * @return copy with a new leaderboard wall
      */
     public LobbyLayout withWall(Wall newWall) {
-        return new LobbyLayout(spawn, voidY, border, npcs, holograms, portals, pads, parkour, eggs, zones, emitters, newWall);
+        return new LobbyLayout(spawn, voidY, border, npcs, holograms, portals, pads, buttons, parkour, eggs, zones, emitters, newWall);
+    }
+
+    /**
+     * @return copy with every coordinate rounded to a thousandth of a block, exactly as layout.yml stores it
+     */
+    public LobbyLayout rounded() {
+        java.util.function.UnaryOperator<Point> p = point -> new Point(round(point.x()), round(point.y()), round(point.z()),
+                point.yaw(), point.pitch());
+        Map<String, Point> roundedNpcs = new java.util.LinkedHashMap<>();
+        npcs.forEach((id, point) -> roundedNpcs.put(id, p.apply(point)));
+        Map<String, Point> roundedHolograms = new java.util.LinkedHashMap<>();
+        holograms.forEach((id, point) -> roundedHolograms.put(id, p.apply(point)));
+        return new LobbyLayout(p.apply(spawn), voidY,
+                border == null ? null : new Border(round(border.centerX()), round(border.centerZ()), round(border.size())),
+                roundedNpcs, roundedHolograms, portals,
+                pads.stream().map(pad -> new LaunchPad(pad.at(), round(pad.vx()), round(pad.vy()), round(pad.vz()))).toList(),
+                buttons, parkour, eggs,
+                zones.stream().map(zone -> new Zone(zone.id(), round(zone.x()), round(zone.z()), round(zone.radius()))).toList(),
+                emitters.stream().map(emitter -> new Emitter(emitter.type(), p.apply(emitter.at()))).toList(),
+                wall == null ? null : new Wall(p.apply(wall.at()), wall.columns(), round(wall.spacingX()), round(wall.spacingY())));
+    }
+
+    private static double round(double value) {
+        return Math.round(value * 1000) / 1000.0;
     }
 
     /**
@@ -199,6 +236,7 @@ public record LobbyLayout(Point spawn, int voidY, Border border, Map<String, Poi
                 portals.stream().map(portal -> new Portal(portal.id(), new Box(b.apply(portal.box().min()), b.apply(portal.box().max())),
                         portal.action(), portal.color())).toList(),
                 pads.stream().map(pad -> new LaunchPad(b.apply(pad.at()), pad.vx(), pad.vy(), pad.vz())).toList(),
+                buttons.stream().map(button -> new Button(b.apply(button.at()), button.action())).toList(),
                 parkour == null ? null : new Parkour(b.apply(parkour.start()), parkour.checkpoints().stream().map(b).toList(),
                         b.apply(parkour.finish()), parkour.fallY() + dy),
                 eggs.stream().map(egg -> new Egg(egg.id(), b.apply(egg.at()))).toList(),

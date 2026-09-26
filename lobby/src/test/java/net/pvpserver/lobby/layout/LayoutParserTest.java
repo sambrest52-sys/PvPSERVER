@@ -35,6 +35,7 @@ class LayoutParserTest {
                 Map.of("parkour", Point.of(40.5, 67.25, 3.5)),
                 List.of(new Portal("ranked", Box.of(new BlockPos(10, 65, -30), new BlockPos(12, 68, -30)), "queue-ranked", "#FFAA00")),
                 List.of(new LaunchPad(new BlockPos(0, 64, 20), 0, 1.2, 2.5)),
+                List.of(new LobbyLayout.Button(new BlockPos(-40, 65, 2), "kit-editor")),
                 new Parkour(new BlockPos(50, 65, 0), List.of(new BlockPos(52, 67, 4), new BlockPos(55, 70, 9)), new BlockPos(60, 80, 12), 58),
                 List.of(new Egg("fountain", new BlockPos(1, 60, 1)), new Egg("tree", new BlockPos(-30, 72, 5))),
                 List.of(new Zone("plaza", 0.5, 0.5, 18)),
@@ -68,6 +69,7 @@ class LayoutParserTest {
                 launch-pads:
                   - {at: "1 64 1", velocity: "0 1 2"}
                   - {at: "1 64 1", velocity: "0 99 0"}
+                buttons: [{at: "1 65 1", action: stats}, {at: "1 65 1"}]
                 parkour: {start: "0 64 0"}
                 zones: {plaza: {center: "0 0", radius: -1}}
                 emitters: [{at: "0 64 0"}]
@@ -80,12 +82,13 @@ class LayoutParserTest {
         assertEquals(Map.of("ranked", new Point(1, 2, 3, 90, 0)), layout.npcs());
         assertEquals(List.of("ok"), layout.portals().stream().map(Portal::id).toList());
         assertEquals(1, layout.pads().size());
+        assertEquals(List.of(new LobbyLayout.Button(new BlockPos(1, 65, 1), "stats")), layout.buttons());
         assertNull(layout.parkour());
         assertTrue(layout.zones().isEmpty());
         assertTrue(layout.emitters().isEmpty());
         assertEquals(4, layout.wall().columns());
         for (String expected : List.of("spawn", "npcs.broken", "portals.huge", "portals.no-action.action", "portals.fractional.from",
-                "launch-pads[1]", "parkour", "zones.plaza", "emitters[0]", "leaderboard-wall.columns")) {
+                "launch-pads[1]", "buttons[1]", "parkour", "zones.plaza", "emitters[0]", "leaderboard-wall.columns")) {
             assertTrue(warnings.stream().anyMatch(w -> w.startsWith(expected)), "warning for " + expected + " in " + warnings);
         }
     }
@@ -111,6 +114,7 @@ class LayoutParserTest {
         assertEquals(20, moved.voidY());
         assertEquals(new BlockPos(110, 55, -25), moved.portals().get(0).box().min());
         assertEquals(new BlockPos(150, 55, 5), moved.parkour().start());
+        assertEquals(new BlockPos(60, 55, 7), moved.buttons().get(0).at());
         assertEquals(48, moved.parkour().fallY());
         assertEquals(100.5, moved.zones().get(0).x());
         assertEquals(100, moved.border().centerX());
